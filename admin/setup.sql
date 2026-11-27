@@ -465,6 +465,16 @@ as $ready$
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'privacy_consent', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'publication_consent', 'INSERT')
 
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'id', 'INSERT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'INSERT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'review_notes', 'INSERT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewed_at', 'INSERT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewer_user_id', 'INSERT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'submitted_at', 'INSERT')
+    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'UPDATE')
+    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'DELETE')
+    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'TRUNCATE')
+
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_name', 'SELECT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_email', 'SELECT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'SELECT')
