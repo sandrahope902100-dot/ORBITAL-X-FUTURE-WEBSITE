@@ -39,7 +39,7 @@ This document separates source-code review from live acceptance testing. A file 
 - Approve/publish, request changes and reject decisions through a protected database RPC.
 - Public directory reads only published business-profile records; applicant contact name/email and private review notes are not copied to the public listing table.
 - Three-submissions-per-contact-email rolling 24-hour database limit, plus a honeypot.
-- A new directory_portal_ready RPC checks required anonymous insert grants, RLS state, required policies and private contact-field read restrictions before the form enables.
+- A new directory_portal_ready RPC checks the confirmed founder allowlist, required anonymous insert grants, RLS state, required policies and private contact/review-field read restrictions before the form enables.
 - admin/verify.sql now checks founder allowlisting, RLS, policies, portal readiness and anonymous access to private contact fields.
 
 ### Security and reliability corrections made during this audit
@@ -53,6 +53,7 @@ This document separates source-code review from live acceptance testing. A file 
 8. Replaced the form's weak “listings table exists” check with the readiness RPC.
 9. Added matching URL and public-email length limits in the form and database.
 10. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
+11. Normalized applicant email in the database before the per-email rate limit and added database-side email and public contact field length checks.
 
 ### What remains blocked
 - The revised admin/setup.sql has **not been executed or verified in Supabase by this audit**. The database state, founder Auth user, confirmed email and public-signup setting are unknown.
