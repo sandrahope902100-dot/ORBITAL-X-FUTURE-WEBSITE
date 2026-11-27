@@ -517,6 +517,29 @@ as $ready$
         and tablename = 'business_listings'
         and policyname = 'Anyone can read published business listings'
         and cmd = 'SELECT'
+    )
+
+    and exists (
+      select 1
+      from pg_catalog.pg_trigger t
+      join pg_catalog.pg_class c on c.oid = t.tgrelid
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public'
+        and c.relname = 'business_submissions'
+        and t.tgname = 'business_submission_rate_limit'
+        and not t.tgisinternal
+    )
+
+    and pg_catalog.has_function_privilege('authenticated', 'public.review_business_submission(uuid,text,text)', 'EXECUTE')
+    and pg_catalog.has_function_privilege('authenticated', 'public.is_orbital_founder()', 'EXECUTE')
+
+    and exists (
+      select 1
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public'
+        and c.relname = 'founder_notes'
+        and c.relrowsecurity
     );
 $ready$;
 
