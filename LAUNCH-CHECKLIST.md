@@ -18,7 +18,8 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 
 ## B. Directory product — NOT COMPLETE
 - [ ] Build a real searchable directory database.
-- [x] Build the first business submission form and consent workflow in the website code; **database activation and end-to-end testing are still pending**.
+- [x] Build the first business submission form with separate privacy and publication consent; **database activation and end-to-end testing are still pending**.
+- [x] Add a database readiness RPC that checks required anonymous insert grants, private-field read restrictions and RLS policies before enabling the public form.
 - [ ] Build duplicate detection and business-claim ownership checks; current workflow uses an applicant authority declaration only.
 - [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions; suspension/removal controls remain pending.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
