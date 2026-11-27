@@ -32,7 +32,40 @@ async function review(id,decision,button){
  }
 }
 async function init(){if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});ready=true;const {data:{session}}=await db.auth.getSession();if(session&&!isFounder(session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}show(Boolean(session));if(session)await Promise.all([notes(),loadApps()]);}
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();if(!ready)return;$("loginButton").disabled=true;msg("loginMessage","Signing in securely…");const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});$("loginButton").disabled=false;if(error){msg("loginMessage","Sign-in failed. Check credentials and Supabase Auth setup.");return;}if(!isFounder(data.session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}msg("loginMessage","");show(true);await Promise.all([notes(),loadApps()]);});
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!ready)return;
+ $("loginButton").disabled=true;
+ msg("loginMessage","Signing in securely…");
+ try{
+  const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error){msg("loginMessage","Sign-in failed. Check credentials and Supabase Auth setup.");return;}
+  if(!isFounder(data.session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}
+  msg("loginMessage","");
+  show(true);
+  await Promise.all([notes(),loadApps()]);
+ }catch(error){
+  console.error("Founder sign-in failed:",error);
+  msg("loginMessage","Sign-in could not be completed because of a connection problem. Try again.");
+ }finally{
+  $("loginButton").disabled=false;
+ }
+});
 $("signOutButton").addEventListener("click",async()=>{await db.auth.signOut();show(false);$("loginForm").reset();});
-$("noteForm").addEventListener("submit",async e=>{e.preventDefault();$("saveNoteButton").disabled=true;const {error}=await db.from("founder_notes").insert({title:$("noteTitle").value.trim(),body:$("noteBody").value.trim()});$("saveNoteButton").disabled=false;if(error){msg("noteMessage","Could not save note. Check database setup.");return;}$("noteForm").reset();msg("noteMessage","Private note saved.");await notes();});
+$("noteForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ $("saveNoteButton").disabled=true;
+ try{
+  const {error}=await db.from("founder_notes").insert({title:$("noteTitle").value.trim(),body:$("noteBody").value.trim()});
+  if(error){msg("noteMessage","Could not save note. Check database setup.");return;}
+  $("noteForm").reset();
+  msg("noteMessage","Private note saved.");
+  await notes();
+ }catch(error){
+  console.error("Founder note save failed:",error);
+  msg("noteMessage","The note could not be saved because of a connection problem.");
+ }finally{
+  $("saveNoteButton").disabled=false;
+ }
+});
 $("refreshApplications").addEventListener("click",loadApps);init();
