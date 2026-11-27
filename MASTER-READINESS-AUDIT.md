@@ -55,6 +55,8 @@ This document separates source-code review from live acceptance testing. A file 
 10. Added matching URL and public-email length limits in the form and database, and normalized applicant email before applying the rolling rate limit.
 11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 12. Clarified in the policy notice that the current application form does not accept file or image uploads.
+13. Pinned the browser Supabase SDK to version 2.119.2 rather than following an unpinned major-version CDN tag.
+14. Extended the readiness and verification checks to confirm anonymous users cannot set status, review notes, reviewer identity, review time or submission time.
 
 
 ### What remains blocked
