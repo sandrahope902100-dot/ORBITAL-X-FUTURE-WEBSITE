@@ -106,7 +106,7 @@ returns jsonb language plpgsql security definer set search_path='' as $$
 declare s public.business_submissions%rowtype; new_slug text;
 begin
  if not public.is_orbital_founder() then raise exception 'Founder authorization required.'; end if;
- if p_decision not in ('approve','reject','request_changes') then raise exception 'Invalid review decision.'; end if;
+ if p_decision is null or p_decision not in ('approve','reject','request_changes') then raise exception 'Invalid review decision.'; end if;
  if p_review_notes is not null and char_length(p_review_notes)>2000 then raise exception 'Review note too long.'; end if;
  select * into s from public.business_submissions where id=p_submission_id for update;
  if not found then raise exception 'Application not found.'; end if;
