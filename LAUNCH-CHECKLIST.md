@@ -39,8 +39,9 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Do not accept manual transfers or promise placements before the written order and delivery process are ready.
 
 ## D. Privacy, security and trust
-- [x] Current website has no account system, submission form or checkout.
-- [x] Current website contact route is an email link; visitors are warned not to send sensitive data.
+- [x] Founder-only admin login and business application/review interfaces are implemented in code; database activation and end-to-end testing remain pending.
+- [x] No public customer account system, checkout or subscription management is implemented.
+- [x] General contact route is an email link; business application form code is present but remains disabled until Supabase setup is verified. Visitors are warned not to send sensitive data.
 - [ ] Decide what personal/business data will be collected when the directory launches and collect only what is necessary.
 - [ ] Set retention and deletion periods, access controls, backup protection and incident response.
 - [ ] Review hosting, email, analytics and payment processors as data processors/service providers.
