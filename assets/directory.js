@@ -1,4 +1,4 @@
-const URL="https://xhjtvtnhimqjgdmrxbzf.supabase.co",KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UnC_A_hZ7jUkxw";const form=document.getElementById("businessApplicationForm"),status=document.getElementById("applicationStatus"),button=document.getElementById("applicationSubmit"),list=document.getElementById("publicListings");const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));let db=null;function say(t){if(status)status.textContent=t;}
+const URL="https://xhjtvtnhimqjgdmrxbzf.supabase.co",KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UnC_A_hZ7jUkxw";const form=document.getElementById("businessApplicationForm"),status=document.getElementById("applicationStatus"),button=document.getElementById("applicationSubmit"),list=document.getElementById("publicListings");const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const APPLICATIONS_OPEN=false;let db=null;function say(t){if(status)status.textContent=t;}
 async function loadListings(){
   try{
     const {data,error}=await db.from("business_listings").select("business_name,category,country,city,description,website_url,public_email,public_phone").eq("is_published",true).order("business_name").limit(60);
@@ -12,10 +12,12 @@ async function start(){
     if(!window.supabase?.createClient){say("Portal library did not load. Refresh.");return;}
     db=window.supabase.createClient(URL,KEY);
     const {data,error}=await db.rpc("directory_portal_ready");
-    if(error||data!==true){say("Portal setup is not finished or could not be verified. The application form will open after database setup.");return;}
-    button.disabled=false;
-    say("Portal ready. Applications are reviewed before publication.");
+    if(error||data!==true){say("Portal setup is not finished or could not be verified. Applications remain closed until setup is confirmed.");return;}
     await loadListings();
+    if(!APPLICATIONS_OPEN){button.disabled=true;button.textContent="Applications temporarily closed";say("The directory database is ready, but applications are temporarily closed while final live browser and mobile testing is completed.");return;}
+    button.disabled=false;
+    button.textContent="Submit application";
+    say("Portal ready. Applications are reviewed before publication.");
   }catch(error){
     console.error("Directory portal setup check failed:",error);
     button.disabled=true;
