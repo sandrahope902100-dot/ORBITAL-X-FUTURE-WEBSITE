@@ -1,9 +1,25 @@
 -- ORBITAL X FUTURE directory workflow. Run the entire file in Supabase SQL Editor.
 -- Keep public sign-ups disabled. Founder Auth email must be verified.
 -- No secret/service_role key is used in browser code.
-create extension if not exists pgcrypto;
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
+
+-- Founder allowlist uses the immutable Auth user UUID, not editable user metadata.
+create table if not exists private.founder_admins(
+ user_id uuid primary key references auth.users(id) on delete cascade,
+ added_at timestamptz not null default now()
+);
+revoke all on private.founder_admins from public, anon, authenticated;
+alter table private.founder_admins enable row level security;
+insert into private.founder_admins(user_id)
+select id from auth.users where lower(email)='orbitalxfuture@gmail.com'
+on conflict(user_id) do nothing;
+
+create or replace function public.is_orbital_founder()
+returns boolean language sql stable security definer set search_path=''
+as $ select exists(select 1 from private.founder_admins where user_id=auth.uid()) $;
+revoke all on function public.is_orbital_founder() from public, anon;
+grant execute on function public.is_orbital_founder() to authenticated;
 
 -- Preserve existing private founder notes.
 create table if not exists public.founder_notes (
@@ -15,13 +31,13 @@ create table if not exists public.founder_notes (
 );
 alter table public.founder_notes enable row level security;
 drop policy if exists "Founder can read own notes" on public.founder_notes;
-create policy "Founder can read own notes" on public.founder_notes for select to authenticated using(auth.uid()=user_id and auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can read own notes" on public.founder_notes for select to authenticated using(auth.uid()=user_id and public.is_orbital_founder());
 drop policy if exists "Founder can create own notes" on public.founder_notes;
-create policy "Founder can create own notes" on public.founder_notes for insert to authenticated with check(auth.uid()=user_id and auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can create own notes" on public.founder_notes for insert to authenticated with check(auth.uid()=user_id and public.is_orbital_founder());
 drop policy if exists "Founder can update own notes" on public.founder_notes;
-create policy "Founder can update own notes" on public.founder_notes for update to authenticated using(auth.uid()=user_id and auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true') with check(auth.uid()=user_id and auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can update own notes" on public.founder_notes for update to authenticated using(auth.uid()=user_id and public.is_orbital_founder()) with check(auth.uid()=user_id and public.is_orbital_founder());
 drop policy if exists "Founder can delete own notes" on public.founder_notes;
-create policy "Founder can delete own notes" on public.founder_notes for delete to authenticated using(auth.uid()=user_id and auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can delete own notes" on public.founder_notes for delete to authenticated using(auth.uid()=user_id and public.is_orbital_founder());
 grant select,insert,update,delete on public.founder_notes to authenticated;
 grant usage,select on sequence public.founder_notes_id_seq to authenticated;
 
@@ -52,7 +68,7 @@ grant select on public.business_submissions to authenticated;
 drop policy if exists "Public can submit pending business applications" on public.business_submissions;
 create policy "Public can submit pending business applications" on public.business_submissions for insert to anon with check(status='pending' and reviewed_at is null and reviewer_user_id is null and review_notes is null and authority_confirmed=true and privacy_consent=true);
 drop policy if exists "Founder can read business applications" on public.business_submissions;
-create policy "Founder can read business applications" on public.business_submissions for select to authenticated using(auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can read business applications" on public.business_submissions for select to authenticated using(public.is_orbital_founder());
 
 create table if not exists public.business_listings(
  id uuid primary key default gen_random_uuid(),
@@ -69,7 +85,7 @@ grant select on public.business_listings to anon,authenticated;
 drop policy if exists "Anyone can read published business listings" on public.business_listings;
 create policy "Anyone can read published business listings" on public.business_listings for select to anon,authenticated using(is_published=true);
 drop policy if exists "Founder can read all business listings" on public.business_listings;
-create policy "Founder can read all business listings" on public.business_listings for select to authenticated using(auth.jwt()->>'email'='orbitalxfuture@gmail.com' and auth.jwt()->>'email_verified'='true');
+create policy "Founder can read all business listings" on public.business_listings for select to authenticated using(public.is_orbital_founder());
 
 -- Rate limit: three applications per contact email per rolling 24 hours.
 create or replace function private.enforce_business_submission_rate_limit() returns trigger language plpgsql security definer set search_path='' as $$
@@ -89,7 +105,7 @@ create or replace function public.review_business_submission(p_submission_id uui
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare s public.business_submissions%rowtype; new_slug text;
 begin
- if auth.jwt()->>'email'<>'orbitalxfuture@gmail.com' or auth.jwt()->>'email_verified'<>'true' then raise exception 'Founder authorization required.'; end if;
+ if not public.is_orbital_founder() then raise exception 'Founder authorization required.'; end if;
  if p_decision not in ('approve','reject','request_changes') then raise exception 'Invalid review decision.'; end if;
  if p_review_notes is not null and char_length(p_review_notes)>2000 then raise exception 'Review note too long.'; end if;
  select * into s from public.business_submissions where id=p_submission_id for update;
