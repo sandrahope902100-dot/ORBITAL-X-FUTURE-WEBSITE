@@ -31,6 +31,7 @@ create table if not exists public.founder_notes (
  created_at timestamptz not null default now()
 );
 alter table public.founder_notes enable row level security;
+revoke all on public.founder_notes from public,anon,authenticated;
 do $policy_reset$ declare p record; begin
  for p in select policyname from pg_policies where schemaname='public' and tablename='founder_notes' loop
   execute format('drop policy %I on public.founder_notes',p.policyname);
@@ -75,7 +76,7 @@ do $policy_reset$ declare p record; begin
   execute format('drop policy %I on public.business_submissions',p.policyname);
  end loop;
 end $policy_reset$;
-revoke all on public.business_submissions from anon,authenticated;
+revoke all on public.business_submissions from public,anon,authenticated;
 grant insert (business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,authority_confirmed,privacy_consent,publication_consent) on public.business_submissions to anon;
 grant select on public.business_submissions to authenticated;
 drop policy if exists "Public can submit pending business applications" on public.business_submissions;
@@ -98,7 +99,7 @@ do $policy_reset$ declare p record; begin
   execute format('drop policy %I on public.business_listings',p.policyname);
  end loop;
 end $policy_reset$;
-revoke all on public.business_listings from anon,authenticated;
+revoke all on public.business_listings from public,anon,authenticated;
 grant select on public.business_listings to anon,authenticated;
 drop policy if exists "Anyone can read published business listings" on public.business_listings;
 create policy "Anyone can read published business listings" on public.business_listings for select to anon,authenticated using(is_published=true);
@@ -145,3 +146,28 @@ begin
 end; $$;
 revoke all on function public.review_business_submission(uuid,text,text) from public,anon;
 grant execute on function public.review_business_submission(uuid,text,text) to authenticated;
+
+-- A small readiness RPC prevents the public form from opening after a partial or
+-- misconfigured setup. It exposes only a boolean and no application data.
+create or replace function public.directory_portal_ready()
+returns boolean language sql stable security definer set search_path=''
+as $ready$
+ select
+  pg_catalog.to_regclass('public.business_submissions') is not null
+  and pg_catalog.to_regclass('public.business_listings') is not null
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','business_name','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','category','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','country','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','city','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','description','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_name','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','publication_consent','INSERT')
+  and not pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','SELECT')
+  and exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='business_submissions' and c.relrowsecurity)
+  and exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='business_listings' and c.relrowsecurity)
+  and exists(select 1 from pg_catalog.pg_policies where schemaname='public' and tablename='business_submissions' and policyname='Public can submit pending business applications' and cmd='INSERT')
+  and exists(select 1 from pg_catalog.pg_policies where schemaname='public' and tablename='business_listings' and policyname='Anyone can read published business listings' and cmd='SELECT');
+$ready$;
+revoke all on function public.directory_portal_ready() from public,anon,authenticated;
+grant execute on function public.directory_portal_ready() to anon;
