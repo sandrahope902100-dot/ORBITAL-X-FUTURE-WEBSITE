@@ -45,12 +45,14 @@ This document separates source-code review from live acceptance testing. A file 
 ### Security and reliability corrections made during this audit
 1. Removed inherited table privileges from PUBLIC, anon and authenticated before re-granting only the required privileges.
 2. Added policy-reset blocks so rerunning the setup script removes unknown/stale policies on the three controlled public tables before recreating the intended policies.
-3. Restricted the founder allowlist to the verified orbitalxfuture@gmail.com Auth user, using the immutable Auth UUID.
+3. Restricted the founder allowlist to the confirmed orbitalxfuture@gmail.com Auth user, using the immutable Auth UUID; the authorization helper also checks that the UUID still belongs to that confirmed email.
 4. Added separate publication consent and made approval fail if that consent is absent.
 5. Made a reason mandatory when the founder requests changes.
 6. Fixed double-encoded line breaks in applicant email drafts.
-7. Added error handling so network failures do not leave the public submit button stuck disabled.
+7. Added error handling so network failures do not leave the public submit button stuck disabled or founder review/login/note controls stuck disabled.
 8. Replaced the form's weak “listings table exists” check with the readiness RPC.
+9. Added matching URL and public-email length limits in the form and database.
+10. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 
 ### What remains blocked
 - The revised admin/setup.sql has **not been executed or verified in Supabase by this audit**. The database state, founder Auth user, confirmed email and public-signup setting are unknown.
@@ -127,7 +129,7 @@ This document separates source-code review from live acceptance testing. A file 
 
 - Website source includes founder and venture structured data, canonical URL, Open Graph/Twitter metadata and a Google verification meta token.
 - The presence of a verification token in HTML does not prove Search Console ownership verification or Google indexing.
-- No independent evidence of a sitemap, Search Console status, indexing or branded search result was recorded.
+- A basic sitemap.xml and robots.txt are now present, with the founder admin path disallowed for crawlers. Search Console ownership verification, indexing and branded search appearance remain unconfirmed.
 - Do not promise that searching the founder's name will immediately show the website.
 
 ## 7. Deployment evidence
