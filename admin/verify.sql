@@ -22,7 +22,17 @@ where schemaname = 'public'
   and tablename in ('business_submissions','business_listings','founder_notes')
 order by tablename, policyname;
 
--- 4. Counts only. No applicant contact details are returned.
+-- 4. Confirm the public application portal's minimum grants and RLS policies.
+select public.directory_portal_ready() as directory_portal_ready;
+
+-- Anonymous visitors must not be able to read private applicant fields.
+select
+  has_column_privilege('anon','public.business_submissions','contact_name','SELECT') as anon_can_read_contact_name,
+  has_column_privilege('anon','public.business_submissions','contact_email','SELECT') as anon_can_read_contact_email,
+  has_column_privilege('anon','public.business_submissions','business_name','INSERT') as anon_can_submit_business_name,
+  has_column_privilege('anon','public.business_submissions','publication_consent','INSERT') as anon_can_submit_publication_consent;
+
+-- 5. Counts only. No applicant contact details are returned.
 select
   (select count(*) from public.business_submissions where status='pending') as pending_applications,
   (select count(*) from public.business_submissions where status='changes_requested') as changes_requested,
