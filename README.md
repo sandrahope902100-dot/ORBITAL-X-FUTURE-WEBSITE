@@ -18,8 +18,8 @@ orbitalxfuture@gmail.com
 
 ## Current business status
 - ORBITAL X FUTURE is described publicly as an independent technology venture. Do not describe it as incorporated or registered.
-- The website is an informational and enquiry-gathering page.
-- The business directory is not live; there is no searchable listing database or business submission portal.
+- The website is an informational pre-launch site. The directory application interface is present but remains disabled until the database is configured and verified.
+- The directory submission form, founder review dashboard and public approved-listing display are implemented in code. The Supabase database has not yet been confirmed active, and the complete submission-to-publication workflow has not passed end-to-end testing. The directory must therefore remain closed until activation and tests pass.
 - Pricing shown on the website is proposed introductory pricing only. It is not an active checkout offer.
 - No payments are currently accepted through the website.
 - Paid placements, listing management, billing, cancellation/refund terms and delivery processes must be finalized before taking payment.
@@ -38,8 +38,8 @@ Sasha AI is a supervised demonstration prototype. It is not approved for paid or
 - Business Plus is described as profile enhancement, not a ranking boost.
 - Featured and Premium are described as sponsored advertising with defined 30-day campaigns and an adjacent Sponsored/Advertisement label.
 - Payment cannot buy verification, favourable reviews, editorial endorsement or guaranteed results.
-- The site currently has no account creation, submission form, listing database, checkout, subscription management, booking, lead-management or analytics dashboard.
-- The privacy notice accurately describes the current email-link-only contact path, Render hosting and Google Fonts dependency. It is a pre-launch notice, not a legal compliance certification.
+- The site currently has no public customer accounts, business self-service editing, checkout, subscription management, booking, lead-management or analytics dashboard. The founder-only admin login and business application/review code exist; database activation and end-to-end tests remain outstanding.
+- The privacy notice describes the planned application data flow, Supabase storage, Render hosting and Google Fonts dependency. It is a pre-launch notice, not a legal compliance certification.
 - Legal identity, business address, governing law, dispute process, tax handling and jurisdiction-specific consumer/privacy review remain launch blockers.
 - Do not accept money, publish listings, promise delivery or sign paid customers until the directory workflow, written customer order, payment method, cancellation/refund process, and applicable legal review are complete.
 
