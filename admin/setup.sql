@@ -78,7 +78,15 @@ do $input_limits$ begin
   alter table public.business_submissions add constraint business_submissions_public_email_length_check check(public_email is null or public_email='' or char_length(public_email)<=254) not valid;
  end if;
  if not exists(select 1 from pg_catalog.pg_constraint where conname='business_submissions_contact_email_format_check' and conrelid='public.business_submissions'::regclass) then
-  alter table public.business_submissions add constraint business_submissions_contact_email_format_check check(contact_email=pg_catalog.lower(pg_catalog.btrim(contact_email)) and contact_email ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}
+  alter table public.business_submissions add constraint business_submissions_contact_email_format_check check(
+   contact_email=pg_catalog.lower(pg_catalog.btrim(contact_email))
+   and position('@' in contact_email)>1
+   and position('@' in pg_catalog.split_part(contact_email,'@',2))=0
+   and position('.' in pg_catalog.split_part(contact_email,'@',2))>1
+   and position(' ' in contact_email)=0
+  ) not valid;
+ end if;
+end $input_limits$;
 alter table public.business_submissions enable row level security;
 do $policy_reset$ declare p record; begin
  for p in select policyname from pg_policies where schemaname='public' and tablename='business_submissions' loop
