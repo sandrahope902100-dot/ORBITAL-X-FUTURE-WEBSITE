@@ -51,11 +51,10 @@ This document separates source-code review from live acceptance testing. A file 
 6. Fixed double-encoded line breaks in applicant email drafts.
 7. Added error handling so network failures do not leave the public submit button stuck disabled or founder review/login/note controls stuck disabled.
 8. Replaced the form's weak “listings table exists” check with the readiness RPC.
-9. Rebuilt the SQL setup file as one clean script after a source review caught malformed/duplicated earlier edits; the current file has one definition of each workflow function and balanced dollar-quote blocks. It still has not been executed in Supabase.
+9. Rebuilt the SQL setup as a clean, single-pass script; source checks confirm one definition of each workflow function and balanced dollar-quote blocks. It still has not been executed in Supabase.
 10. Added matching URL and public-email length limits in the form and database, and normalized applicant email before applying the rolling rate limit.
 11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 12. Clarified in the policy notice that the current application form does not accept file or image uploads.
-9. Added matching URL and public-email length limits in the form and database.
 
 
 ### What remains blocked
