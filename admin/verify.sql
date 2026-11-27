@@ -25,6 +25,20 @@ order by tablename, policyname;
 -- 4. Confirm the public application portal's minimum grants and RLS policies.
 select public.directory_portal_ready() as directory_portal_ready;
 
+select
+  exists(
+    select 1
+    from pg_trigger t
+    join pg_class c on c.oid=t.tgrelid
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public'
+      and c.relname='business_submissions'
+      and t.tgname='business_submission_rate_limit'
+      and not t.tgisinternal
+  ) as rate_limit_trigger_exists,
+  has_function_privilege('authenticated','public.review_business_submission(uuid,text,text)','EXECUTE') as founder_review_rpc_executable,
+  has_function_privilege('authenticated','public.is_orbital_founder()','EXECUTE') as founder_check_executable;
+
 -- Anonymous visitors must not be able to read private applicant fields.
 select
   has_column_privilege('anon','public.business_submissions','contact_name','SELECT') as anon_can_read_contact_name,
