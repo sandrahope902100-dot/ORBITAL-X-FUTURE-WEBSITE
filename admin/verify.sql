@@ -34,7 +34,12 @@ select
   has_column_privilege('anon','public.business_submissions','reviewer_user_id','SELECT') as anon_can_read_reviewer,
   has_column_privilege('anon','public.business_submissions','submitted_at','SELECT') as anon_can_read_submission_time,
   has_column_privilege('anon','public.business_submissions','business_name','INSERT') as anon_can_submit_business_name,
-  has_column_privilege('anon','public.business_submissions','publication_consent','INSERT') as anon_can_submit_publication_consent;
+  has_column_privilege('anon','public.business_submissions','publication_consent','INSERT') as anon_can_submit_publication_consent,
+  has_column_privilege('anon','public.business_submissions','status','INSERT') as anon_can_set_status,
+  has_column_privilege('anon','public.business_submissions','review_notes','INSERT') as anon_can_set_review_notes,
+  has_column_privilege('anon','public.business_submissions','reviewed_at','INSERT') as anon_can_set_reviewed_at,
+  has_column_privilege('anon','public.business_submissions','reviewer_user_id','INSERT') as anon_can_set_reviewer,
+  has_column_privilege('anon','public.business_submissions','submitted_at','INSERT') as anon_can_set_submitted_at;
 
 -- 5. Counts only. No applicant contact details are returned.
 select
