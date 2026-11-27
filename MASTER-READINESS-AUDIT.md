@@ -51,9 +51,12 @@ This document separates source-code review from live acceptance testing. A file 
 6. Fixed double-encoded line breaks in applicant email drafts.
 7. Added error handling so network failures do not leave the public submit button stuck disabled or founder review/login/note controls stuck disabled.
 8. Replaced the form's weak “listings table exists” check with the readiness RPC.
+9. Rebuilt the SQL setup file as one clean script after a source review caught malformed/duplicated earlier edits; the current file has one definition of each workflow function and balanced dollar-quote blocks. It still has not been executed in Supabase.
+10. Added matching URL and public-email length limits in the form and database, and normalized applicant email before applying the rolling rate limit.
+11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
+12. Clarified in the policy notice that the current application form does not accept file or image uploads.
 9. Added matching URL and public-email length limits in the form and database.
-10. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
-11. Normalized applicant email in the database before the per-email rate limit and added database-side email and public contact field length checks.
+
 
 ### What remains blocked
 - The revised admin/setup.sql has **not been executed or verified in Supabase by this audit**. The database state, founder Auth user, confirmed email and public-signup setting are unknown.
@@ -135,8 +138,8 @@ This document separates source-code review from live acceptance testing. A file 
 
 ## 7. Deployment evidence
 
-- Website Render service: static site, branch main, automatic deployment enabled. Latest source changes are published only after the newest deployment reports live.
-- Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. A successful source commit is not live until a manual deployment reports live.
+- Website Render service: static site, branch main, automatic deployment enabled. Latest website commit 9ea2b9d220863faf6f2062c590a753b6f696ee96 is live in deploy dep-dc4usm0ae00c73e8hjs0.
+- Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. Audited application commit 7c71c6d17252581acf856b64f22d8d417c897d96 is live in deploy dep-dc4upi15efls73ar00d0.
 - A live deployment proves the deployment completed; it does not prove database, provider or user-journey acceptance tests passed.
 - No direct live HTTP result for /healthz, /api/config, the website homepage or the admin login was recorded in this audit. Browser/device verification remains pending.
 
