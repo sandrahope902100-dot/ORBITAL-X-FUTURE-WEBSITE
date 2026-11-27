@@ -48,7 +48,7 @@ The website may be used to explain the venture and collect voluntary email enqui
 
 
 ## Directory application and approval system
-- Public homepage form submits new applications as pending only after the readiness RPC confirms required tables, RLS policies and anonymous column grants.
+- Public homepage form submits new applications as pending only after the readiness RPC confirms the confirmed founder is allowlisted, required tables and RLS policies exist, anonymous insert grants are correct, and private applicant fields are not readable.
 - Applicants separately consent to privacy processing and to publication of their business profile if approved; the database enforces both.
 - Anonymous visitors can submit but cannot read, change or delete applications.
 - Founder dashboard at /admin/ displays private applications.
