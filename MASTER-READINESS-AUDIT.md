@@ -139,7 +139,7 @@ This document separates source-code review from live acceptance testing. A file 
 
 ## 7. Deployment evidence
 
-- Website Render service: static site, branch main, automatic deployment enabled. Latest verified live deployment: `dep-dc4v6igjo6nc73c8bm0g`, commit `372e11b431a3dd1fac3fb49233edcad69b511ec0` (includes directory launch gate, privacy notice, audit/checklist updates, SEO evidence and `.gitignore`).
+- Website Render service: static site, branch `main`, automatic deployment enabled. Render confirmed the latest source/audit commit live during this audit. The public application form remains closed through `APPLICATIONS_OPEN=false` until Android/browser acceptance testing and the remaining privacy/operational gates pass.
 - Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. Application source commit 26464cfce26ef2644c151b2b00f9082b0764d36a is live in deploy dep-dc4ut197lnhs739vr1cg (deployed from branch head 49a1ed210d73fe2b0cf153dd1c144988b00f7c7d).
 - A live deployment proves the deployment completed; it does not prove database, provider or user-journey acceptance tests passed.
 - No direct live HTTP result for /healthz, /api/config, the website homepage or the admin login was recorded in this audit. Browser/device verification remains pending.
