@@ -29,6 +29,10 @@ select public.directory_portal_ready() as directory_portal_ready;
 select
   has_column_privilege('anon','public.business_submissions','contact_name','SELECT') as anon_can_read_contact_name,
   has_column_privilege('anon','public.business_submissions','contact_email','SELECT') as anon_can_read_contact_email,
+  has_column_privilege('anon','public.business_submissions','status','SELECT') as anon_can_read_status,
+  has_column_privilege('anon','public.business_submissions','review_notes','SELECT') as anon_can_read_review_notes,
+  has_column_privilege('anon','public.business_submissions','reviewer_user_id','SELECT') as anon_can_read_reviewer,
+  has_column_privilege('anon','public.business_submissions','submitted_at','SELECT') as anon_can_read_submission_time,
   has_column_privilege('anon','public.business_submissions','business_name','INSERT') as anon_can_submit_business_name,
   has_column_privilege('anon','public.business_submissions','publication_consent','INSERT') as anon_can_submit_publication_consent;
 
