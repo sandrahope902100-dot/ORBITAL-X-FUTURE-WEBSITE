@@ -1,116 +1,16 @@
-// Public project configuration. Database access is protected by Supabase Auth and RLS.
-const SUPABASE_URL = "https://xhjtvtnhimqjgdmrxbzf.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_aNNnBlHcl-GMv3Mh5_UncA_hZ7jUkxw";
-
-const loginView = document.getElementById("loginView");
-const dashboardView = document.getElementById("dashboardView");
-const loginForm = document.getElementById("loginForm");
-const loginMessage = document.getElementById("loginMessage");
-const noteMessage = document.getElementById("noteMessage");
-const loginButton = document.getElementById("loginButton");
-const saveNoteButton = document.getElementById("saveNoteButton");
-const notesList = document.getElementById("notesList");
-
-let supabaseClient = null;
-let configurationReady = false;
-
-function showMessage(target, message) {
-  if (target) target.textContent = message || "";
-}
-
-function showDashboard(isSignedIn) {
-  loginView.hidden = isSignedIn;
-  dashboardView.hidden = !isSignedIn;
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  })[char]);
-}
-
-async function loadNotes() {
-  notesList.innerHTML = '<p class="muted">Loading notes…</p>';
-  const { data, error } = await supabaseClient
-    .from("founder_notes")
-    .select("id,title,body,created_at")
-    .order("created_at", { ascending: false });
-  if (error) {
-    notesList.innerHTML = '<p class="message">Could not load notes. Check that the database setup SQL has been run.</p>';
-    return;
-  }
-  if (!data || data.length === 0) {
-    notesList.innerHTML = '<p class="muted">No private notes yet. Add your first note above.</p>';
-    return;
-  }
-  notesList.innerHTML = data.map(note => {
-    const date = new Date(note.created_at).toLocaleString();
-    return '<article class="note"><strong>' + escapeHtml(note.title) +
-      '</strong><p>' + escapeHtml(note.body) + '</p><time>' +
-      escapeHtml(date) + '</time></article>';
-  }).join("");
-}
-
-async function initialize() {
-  if (!window.supabase || !window.supabase.createClient) {
-    showMessage(loginMessage, "The secure sign-in library did not load. Check your internet connection and refresh.");
-    return;
-  }
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    showMessage(loginMessage, "Dashboard configuration is incomplete.");
-    return;
-  }
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
-  configurationReady = true;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  showDashboard(Boolean(session));
-  if (session) await loadNotes();
-}
-
-loginForm.addEventListener("submit", async event => {
-  event.preventDefault();
-  if (!configurationReady) {
-    showMessage(loginMessage, "Secure sign-in is still initializing. Refresh and try again.");
-    return;
-  }
-  loginButton.disabled = true;
-  showMessage(loginMessage, "Signing in securely…");
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  loginButton.disabled = false;
-  if (error) {
-    showMessage(loginMessage, "Sign-in failed: " + error.message);
-    return;
-  }
-  showMessage(loginMessage, "");
-  showDashboard(true);
-  await loadNotes();
-});
-
-document.getElementById("signOutButton").addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
-  showDashboard(false);
-  loginForm.reset();
-});
-
-document.getElementById("noteForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  saveNoteButton.disabled = true;
-  showMessage(noteMessage, "Saving your note…");
-  const title = document.getElementById("noteTitle").value.trim();
-  const body = document.getElementById("noteBody").value.trim();
-  const { error } = await supabaseClient.from("founder_notes").insert({ title, body });
-  saveNoteButton.disabled = false;
-  if (error) {
-    showMessage(noteMessage, "Could not save note: " + error.message);
-    return;
-  }
-  document.getElementById("noteForm").reset();
-  showMessage(noteMessage, "Private note saved.");
-  await loadNotes();
-});
-
-initialize();
+const SUPABASE_URL="https://xhjtvtnhimqjgdmrxbzf.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UnC_A_hZ7jUkxw";
+const FOUNDER="orbitalxfuture@gmail.com";const $=id=>document.getElementById(id);let db=null,ready=false;
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const msg=(id,t)=>{$(id).textContent=t||"";};
+const isFounder=s=>Boolean(s?.user?.email?.toLowerCase()===FOUNDER&&s.user.email_confirmed_at);
+function show(on){$("loginView").hidden=on;$("dashboardView").hidden=!on;}
+async function notes(){const {data,error}=await db.from("founder_notes").select("id,title,body,created_at").order("created_at",{ascending:false});if(error){$("notesList").textContent="Private notes unavailable; check SQL setup.";return;} $("notesList").innerHTML=data?.length?data.map(n=>'<article class="note"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+esc(new Date(n.created_at).toLocaleString())+'</time></article>').join(""):'<p class="muted">No private notes yet.</p>';}
+async function approved(){const {data,error}=await db.from("business_listings").select("business_name,category,city,country,is_published,published_at").order("published_at",{ascending:false});if(error){$("approvedListings").textContent="Could not load listings.";return;} $("approvedListings").innerHTML=data?.length?data.map(x=>'<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p></div><span class="status-pill">'+(x.is_published?"Published":"Hidden")+'</span></article>').join(""):'<p class="muted">No approved listings yet.</p>';}
+async function loadApps(){const {data,error}=await db.from("business_submissions").select("id,business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,status,review_notes,submitted_at").in("status",["pending","changes_requested"]).order("submitted_at");if(error){$("applicationsList").textContent="Cannot load applications. Check that the SQL setup completed and this is the verified founder account.";msg("applicationMessage",error.message);return;}msg("applicationMessage","");$("applicationsList").innerHTML=data?.length?data.map(s=>{const fields=[["Category",s.category],["Location",s.city+", "+s.country],["Description",s.description],["Website",s.website_url],["Public email",s.public_email],["Public phone",s.public_phone],["Applicant",s.contact_name],["Private contact email",s.contact_email],["Submitted",new Date(s.submitted_at).toLocaleString()]];return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc(s.status.replace("_"," "))+'</span><h3>'+esc(s.business_name)+'</h3></div><small>'+esc(s.id.slice(0,8))+'</small></div><div class="application-details">'+fields.filter(x=>x[1]).map(x=>'<div class="application-detail"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join("")+'</div><label>Private review note<textarea id="review-'+s.id+'" rows="2" maxlength="2000">'+esc(s.review_notes||"")+'</textarea></label><div class="review-actions"><button data-action="approve" data-id="'+s.id+'">Approve & publish</button><button class="secondary" data-action="request_changes" data-id="'+s.id+'">Request changes</button><button class="danger" data-action="reject" data-id="'+s.id+'">Reject</button></div></article>';}).join(""):'<p class="muted">No applications waiting for review.</p>'; $("applicationsList").querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>review(b.dataset.id,b.dataset.action,b)));await approved();}
+async function review(id,decision,button){if(decision==="approve"&&!confirm("Approve this business and publish its profile?"))return;if(decision==="reject"&&!confirm("Reject this application?"))return;button.disabled=true;msg("applicationMessage","Saving decision…");const {error}=await db.rpc("review_business_submission",{p_submission_id:id,p_decision:decision,p_review_notes:$("review-"+id).value.trim()||null});button.disabled=false;if(error){msg("applicationMessage","Not saved: "+error.message);return;}msg("applicationMessage","Decision saved.");await loadApps();}
+async function init(){if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});ready=true;const {data:{session}}=await db.auth.getSession();if(session&&!isFounder(session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}show(Boolean(session));if(session)await Promise.all([notes(),loadApps()]);}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();if(!ready)return;$("loginButton").disabled=true;msg("loginMessage","Signing in securely…");const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});$("loginButton").disabled=false;if(error){msg("loginMessage","Sign-in failed. Check credentials and Supabase Auth setup.");return;}if(!isFounder(data.session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}msg("loginMessage","");show(true);await Promise.all([notes(),loadApps()]);});
+$("signOutButton").addEventListener("click",async()=>{await db.auth.signOut();show(false);$("loginForm").reset();});
+$("noteForm").addEventListener("submit",async e=>{e.preventDefault();$("saveNoteButton").disabled=true;const {error}=await db.from("founder_notes").insert({title:$("noteTitle").value.trim(),body:$("noteBody").value.trim()});$("saveNoteButton").disabled=false;if(error){msg("noteMessage","Could not save note. Check database setup.");return;}$("noteForm").reset();msg("noteMessage","Private note saved.");await notes();});
+$("refreshApplications").addEventListener("click",loadApps);init();
