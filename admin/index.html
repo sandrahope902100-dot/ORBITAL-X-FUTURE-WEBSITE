@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#070b14">
+  <title>Founder Admin | ORBITAL X FUTURE</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="../"><span class="mark">OX</span><span>ORBITAL <b>X</b> FUTURE</span></a>
+      <span class="private-label">PRIVATE FOUNDER AREA</span>
+    </header>
+
+    <section id="loginView" class="login-wrap">
+      <div class="panel login-panel">
+        <p class="eyebrow">SECURE ACCESS / 01</p>
+        <h1>Founder<br><span>sign in.</span></h1>
+        <p class="muted">This private workspace is reserved for the founder of ORBITAL X FUTURE.</p>
+        <form id="loginForm">
+          <label for="email">Founder email</label>
+          <input id="email" name="email" type="email" autocomplete="username" value="orbitalxfuture@gmail.com" required>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button type="submit" id="loginButton">Sign in securely <span>↗</span></button>
+          <p id="loginMessage" class="message" role="status"></p>
+        </form>
+        <p class="tiny">Access is managed through Supabase authentication. Public account registration is not provided here.</p>
+      </div>
+    </section>
+
+    <section id="dashboardView" hidden>
+      <div class="welcome">
+        <div><p class="eyebrow">FOUNDER WORKSPACE / 02</p><h1>Command<br><span>center.</span></h1><p class="muted">Your venture, products and operational notes in one private place.</p></div>
+        <button class="secondary" id="signOutButton">Sign out</button>
+      </div>
+      <div class="stats">
+        <article class="panel stat"><span class="muted">VENTURE</span><strong>ORBITAL X FUTURE</strong><small>Independent technology venture</small></article>
+        <article class="panel stat"><span class="muted">FLAGSHIP PRODUCT</span><strong>Sasha AI</strong><small>AI assistant · Live web app</small></article>
+        <article class="panel stat"><span class="muted">WORKSPACE STATUS</span><strong class="online">Connected</strong><small>Authenticated founder session</small></article>
+      </div>
+      <div class="columns">
+        <section class="panel">
+          <p class="eyebrow">01 / VENTURE LINKS</p><h2>Quick access</h2>
+          <a class="link-card" href="https://orbital-x-future.onrender.com/" target="_blank" rel="noopener"><span>Public venture website</span><b>↗</b></a>
+          <a class="link-card" href="https://sasha-ai-ttk7.onrender.com/" target="_blank" rel="noopener"><span>Sasha AI application</span><b>↗</b></a>
+          <a class="link-card" href="https://github.com/sandrahope902100-dot/ORBITAL-X-FUTURE-WEBSITE" target="_blank" rel="noopener"><span>Website source repository</span><b>↗</b></a>
+          <a class="link-card" href="https://github.com/sandrahope902100-dot/SASHA-AI" target="_blank" rel="noopener"><span>Sasha AI source repository</span><b>↗</b></a>
+        </section>
+        <section class="panel">
+          <p class="eyebrow">02 / FOUNDER NOTES</p><h2>Private notes</h2>
+          <form id="noteForm">
+            <label for="noteTitle">Note title</label><input id="noteTitle" maxlength="100" required placeholder="e.g. Next Sasha AI update">
+            <label for="noteBody">Details</label><textarea id="noteBody" rows="4" maxlength="5000" required placeholder="Write a private reminder or project update..."></textarea>
+            <button type="submit" id="saveNoteButton">Save private note</button>
+            <p id="noteMessage" class="message" role="status"></p>
+          </form>
+          <div id="notesList" class="notes-list"><p class="muted">Loading notes…</p></div>
+        </section>
+      </div>
+      <p class="footnote">ORBITAL X FUTURE · Founder access only · Keep your sign-in credentials private.</p>
+    </section>
+    <footer>INNOVATION WITHOUT BOUNDARIES <span>© 2026 ORBITAL X FUTURE</span></footer>
+  </main>
+</body>
+</html>
