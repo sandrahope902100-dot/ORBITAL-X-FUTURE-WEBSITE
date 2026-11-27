@@ -139,7 +139,7 @@ This document separates source-code review from live acceptance testing. A file 
 
 ## 7. Deployment evidence
 
-- Website Render service: static site, branch main, automatic deployment enabled. The latest directory SQL/readiness and verification changes, website content and master audit documentation are included in the current main branch; the current deployment was verified live during this audit.
+- Website Render service: static site, branch main, automatic deployment enabled. Latest verified live deployment: `dep-dc4v5drrjlhs738e3nhg`, commit `05983ceb7abede4ee64de11d13b90ffe042e7be0` (includes directory launch gate, privacy notice, audit/checklist updates and `.gitignore`).
 - Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. Application source commit 26464cfce26ef2644c151b2b00f9082b0764d36a is live in deploy dep-dc4ut197lnhs739vr1cg (deployed from branch head 49a1ed210d73fe2b0cf153dd1c144988b00f7c7d).
 - A live deployment proves the deployment completed; it does not prove database, provider or user-journey acceptance tests passed.
 - No direct live HTTP result for /healthz, /api/config, the website homepage or the admin login was recorded in this audit. Browser/device verification remains pending.
@@ -152,10 +152,10 @@ This document separates source-code review from live acceptance testing. A file 
 
 ## 9. Closure order — freeze new features
 
-1. **Supabase activation:** founder Auth identity, disabled public signups, latest SQL setup and verification.
+1. **Directory browser acceptance:** test the actual public form and founder dashboard in Android Chrome; verify public Auth sign-ups are disabled.
 2. **Directory acceptance tests:** anonymous submit/privacy, founder queue, approve/publish, request changes, reject, test cleanup.
 3. **Website QA:** Android Chrome, navigation, form validation, policy links, accessibility and mobile layout.
-4. **Sasha deployment verification:** latest deployment live; confirm startup logs; set /healthz in Render; test endpoint.
+4. **Sasha deployment verification:** latest deployment is live and startup logs show the process running; configure `/healthz` as the Render health-check path and complete a direct HTTP test.
 5. **Sasha acceptance tests:** text, context, action truthfulness, provider failure, timeout, voice, microphone, PWA and abuse limits.
 6. **Provider/privacy decisions:** confirm Gemini account tier and data handling; recheck Fish Audio terms before 1 December 2026; decide fallback.
 7. **Operational controls:** moderation, correction/removal, duplicate checks, support and data retention.
