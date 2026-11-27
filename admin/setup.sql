@@ -11,14 +11,14 @@ create table if not exists private.founder_admins(
 );
 revoke all on private.founder_admins from public, anon, authenticated;
 alter table private.founder_admins enable row level security;
-delete from private.founder_admins where user_id not in (select id from auth.users where lower(email)='orbitalxfuture@gmail.com');
+delete from private.founder_admins where user_id not in (select id from auth.users where lower(email)='orbitalxfuture@gmail.com' and email_confirmed_at is not null);
 insert into private.founder_admins(user_id)
-select id from auth.users where lower(email)='orbitalxfuture@gmail.com'
+select id from auth.users where lower(email)='orbitalxfuture@gmail.com' and email_confirmed_at is not null
 on conflict(user_id) do nothing;
 
 create or replace function public.is_orbital_founder()
 returns boolean language sql stable security definer set search_path=''
-as $founder$ select exists(select 1 from private.founder_admins where user_id=auth.uid()) $founder$;
+as $founder$ select exists(select 1 from private.founder_admins f join auth.users u on u.id=f.user_id where f.user_id=auth.uid() and lower(u.email)='orbitalxfuture@gmail.com' and u.email_confirmed_at is not null) $founder$;
 revoke all on function public.is_orbital_founder() from public, anon;
 grant execute on function public.is_orbital_founder() to authenticated;
 
