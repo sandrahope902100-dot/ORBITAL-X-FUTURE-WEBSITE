@@ -45,3 +45,16 @@ Sasha AI is a supervised demonstration prototype. It is not approved for paid or
 
 ## Launch gate
 The website may be used to explain the venture and collect voluntary email enquiries only. It is **not a live directory or paid advertising service**. The website commit deploys automatically through Render; verify the latest deployment is live before announcing changes.
+
+
+## Directory application and approval system
+- Public homepage form submits new applications as pending.
+- Anonymous visitors can submit but cannot read, change or delete applications.
+- Founder dashboard at /admin/ displays private applications.
+- Only the verified Auth identity orbitalxfuture@gmail.com can review.
+- Approve creates a public listing; request-changes and reject do not publish.
+- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table.
+- Database limit: 3 applications per contact email per rolling 24 hours; form honeypot supplements it. CAPTCHA is not yet included.
+- Run the full admin/setup.sql in Supabase SQL Editor. Public sign-ups must remain disabled and founder email confirmed.
+- No file uploads, business self-service editing, payments, subscriptions or customer accounts in this first version.
+- Do not announce applications as open until SQL setup has succeeded and test submissions have been reviewed.
