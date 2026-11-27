@@ -11,8 +11,8 @@ async function start(){
   try{
     if(!window.supabase?.createClient){say("Portal library did not load. Refresh.");return;}
     db=window.supabase.createClient(URL,KEY);
-    const {error}=await db.from("business_listings").select("id").limit(1);
-    if(error){say("Portal setup is not finished. The application form will open after database setup.");return;}
+    const {data,error}=await db.rpc("directory_portal_ready");
+    if(error||data!==true){say("Portal setup is not finished or could not be verified. The application form will open after database setup.");return;}
     button.disabled=false;
     say("Portal ready. Applications are reviewed before publication.");
     await loadListings();
