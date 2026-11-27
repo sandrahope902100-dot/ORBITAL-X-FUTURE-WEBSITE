@@ -39,7 +39,7 @@ This document separates source-code review from live acceptance testing. A file 
 - Approve/publish, request changes and reject decisions through a protected database RPC.
 - Public directory reads only published business-profile records; applicant contact name/email and private review notes are not copied to the public listing table.
 - Three-submissions-per-contact-email rolling 24-hour database limit, plus a honeypot.
-- A new directory_portal_ready RPC checks the confirmed founder allowlist, required anonymous insert grants, RLS state, required policies and private contact/review-field read restrictions before the form enables.
+- A new directory_portal_ready RPC checks the confirmed founder allowlist, required anonymous insert grants, RLS state, required policies, the email rate-limit trigger, founder review RPC permissions and private contact/review-field read restrictions before the form enables.
 - admin/verify.sql now checks founder allowlisting, RLS, policies, portal readiness and anonymous access to private contact fields.
 
 ### Security and reliability corrections made during this audit
