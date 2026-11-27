@@ -64,5 +64,17 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Verify Google Search Console ownership and indexing directly; a verification meta tag alone is not proof of verification or indexing.
 - [ ] Complete legal registration and any tax/business registrations when financially and legally appropriate. Do not claim registration before it exists.
 
-## Directory activation steps (not yet complete)\n1. Confirm the Supabase Auth user `orbitalxfuture@gmail.com` exists and its email is confirmed.\n2. Confirm public sign-ups are disabled.\n3. Run the complete `admin/setup.sql` in Supabase SQL Editor. It seeds the founder UUID allowlist if the Auth user already exists. If the user is created afterward, run the SQL again to seed the allowlist.\n4. Open `/admin/` and verify founder sign-in, pending queue and review actions.\n5. Submit a test application from a separate browser/private session; confirm anonymous access cannot read it.\n6. Approve the test application; confirm only the public business profile appears on the homepage and private applicant contact details remain hidden.\n7. Test request-changes and rejection; confirm neither creates a public listing.\n8. Delete test records through a controlled SQL cleanup after verification.\n9. Only then announce that applications are open.\n\n## Go-live rule
+## Directory activation steps (not yet complete)
+
+1. Confirm the Supabase Auth user `orbitalxfuture@gmail.com` exists and its email is confirmed.
+2. Confirm public sign-ups are disabled.
+3. Run the complete `admin/setup.sql` in Supabase SQL Editor. It seeds the founder UUID allowlist if the Auth user already exists. If the user is created afterward, run the SQL again to seed the allowlist.
+4. Open `/admin/` and verify founder sign-in, pending queue and review actions.
+5. Submit a test application from a separate browser/private session; confirm anonymous access cannot read it.
+6. Approve the test application; confirm only the public business profile appears on the homepage and private applicant contact details remain hidden.
+7. Test request-changes and rejection; confirm neither creates a public listing.
+8. Delete test records through a controlled SQL cleanup after verification.
+9. Only then announce that applications are open.
+
+## Go-live rule
 The website may currently be used to explain the venture and invite voluntary email enquiries. Do not publish directory entries, accept listing applications, take payments, promise advertising delivery, or sell Sasha AI for business use until the relevant sections above are completed and tested. The founder should approve final prices, legal terms and all customer-facing commitments before activation.
