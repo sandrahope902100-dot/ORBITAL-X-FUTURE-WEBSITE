@@ -12,6 +12,7 @@ create table if not exists private.founder_admins (
   added_at timestamptz not null default now()
 );
 revoke all on private.founder_admins from public, anon, authenticated;
+revoke all (user_id, added_at) on table private.founder_admins from public, anon, authenticated;
 alter table private.founder_admins enable row level security;
 
 delete from private.founder_admins
@@ -57,6 +58,7 @@ create table if not exists public.founder_notes (
 );
 alter table public.founder_notes enable row level security;
 revoke all on public.founder_notes from public, anon, authenticated;
+revoke all (id, user_id, title, body, created_at) on table public.founder_notes from public, anon, authenticated;
 
 do $notes_policy_reset$
 declare p record;
@@ -204,6 +206,7 @@ end
 $submissions_policy_reset$;
 
 revoke all on public.business_submissions from public, anon, authenticated;
+revoke all (id, business_name, category, country, city, description, website_url, public_email, public_phone, contact_name, contact_email, authority_confirmed, privacy_consent, publication_consent, status, review_notes, reviewed_at, reviewer_user_id, submitted_at) on table public.business_submissions from public, anon, authenticated;
 
 grant insert (
   business_name,
@@ -261,6 +264,7 @@ on public.business_listings(is_published, category, business_name);
 
 alter table public.business_listings enable row level security;
 revoke all on public.business_listings from public, anon, authenticated;
+revoke all (id, submission_id, slug, business_name, category, country, city, description, website_url, public_email, public_phone, is_published, published_at) on table public.business_listings from public, anon, authenticated;
 
 do $listings_policy_reset$
 declare p record;
@@ -456,6 +460,11 @@ as $ready$
 
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_name', 'SELECT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_email', 'SELECT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'SELECT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'review_notes', 'SELECT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewed_at', 'SELECT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewer_user_id', 'SELECT')
+    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'submitted_at', 'SELECT')
     and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'SELECT')
     and pg_catalog.has_table_privilege('anon', 'public.business_listings', 'SELECT')
 
