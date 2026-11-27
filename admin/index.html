@@ -36,7 +36,7 @@
 
     <section id="dashboardView" hidden>
       <div class="welcome">
-        <div><p class="eyebrow">FOUNDER WORKSPACE / 02</p><h1>Command<br><span>center.</span></h1><p class="muted">Your venture, products and operational notes in one private place.</p></div>
+        <div><p class="eyebrow">FOUNDER WORKSPACE / 02</p><h1>Command<br><span>center.</span></h1><p class="muted">Review business applications, approve listings and manage private venture notes.</p></div>
         <button class="secondary" id="signOutButton">Sign out</button>
       </div>
       <div class="stats">
@@ -44,7 +44,7 @@
         <article class="panel stat"><span class="muted">FLAGSHIP PRODUCT</span><strong>Sasha AI</strong><small>AI assistant · Live web app</small></article>
         <article class="panel stat"><span class="muted">WORKSPACE STATUS</span><strong class="online">Connected</strong><small>Authenticated founder session</small></article>
       </div>
-      <div class="columns">
+      <section class="panel directory-admin"><div class="section-head"><div><p class="eyebrow">03 / BUSINESS DIRECTORY</p><h2>Applications for review</h2></div><button class="secondary" id="refreshApplications">Refresh</button></div><p class="muted">Pending applications are private. Approving publishes business profile fields only; private applicant details are never public.</p><p id="applicationMessage" class="message" role="status"></p><div id="applicationsList"><p class="muted">Loading applications…</p></div></section><section class="panel directory-admin"><p class="eyebrow">04 / PUBLIC DIRECTORY</p><h2>Approved listings</h2><div id="approvedListings"></div></section><div class="columns">
         <section class="panel">
           <p class="eyebrow">01 / VENTURE LINKS</p><h2>Quick access</h2>
           <a class="link-card" href="https://orbital-x-future.onrender.com/" target="_blank" rel="noopener"><span>Public venture website</span><b>↗</b></a>
