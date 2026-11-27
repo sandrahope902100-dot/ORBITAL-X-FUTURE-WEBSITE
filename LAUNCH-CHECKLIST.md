@@ -18,13 +18,13 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 
 ## B. Directory product — NOT COMPLETE
 - [ ] Build a real searchable directory database.
-- [ ] Build a business submission and consent workflow.
-- [ ] Build duplicate detection and business-claim ownership checks.
-- [ ] Build an admin review, approval, correction, suspension and removal process.
+- [x] Build the first business submission form and consent workflow in the website code; **database activation and end-to-end testing are still pending**.
+- [ ] Build duplicate detection and business-claim ownership checks; current workflow uses an applicant authority declaration only.
+- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions; suspension/removal controls remain pending.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
 - [ ] Build a public report-a-listing / correction / removal request process.
 - [ ] Define category taxonomy, neutral default sort order and sponsored inventory limits.
-- [ ] Test accessibility, mobile layout, security, backups and data export/deletion.
+- [ ] Add CAPTCHA/bot protection beyond the honeypot and email rate limit; test accessibility, mobile layout, security, backups and data export/deletion.
 - [ ] Add a clear business contact and support process before accepting submissions.
 
 ## C. Paid packages — NOT AVAILABLE FOR SALE
@@ -63,5 +63,5 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Verify Google Search Console ownership and indexing directly; a verification meta tag alone is not proof of verification or indexing.
 - [ ] Complete legal registration and any tax/business registrations when financially and legally appropriate. Do not claim registration before it exists.
 
-## Go-live rule
+## Directory activation steps (not yet complete)\n1. Confirm the Supabase Auth user `orbitalxfuture@gmail.com` exists and its email is confirmed.\n2. Confirm public sign-ups are disabled.\n3. Run the complete `admin/setup.sql` in Supabase SQL Editor. It seeds the founder UUID allowlist if the Auth user already exists. If the user is created afterward, run the SQL again to seed the allowlist.\n4. Open `/admin/` and verify founder sign-in, pending queue and review actions.\n5. Submit a test application from a separate browser/private session; confirm anonymous access cannot read it.\n6. Approve the test application; confirm only the public business profile appears on the homepage and private applicant contact details remain hidden.\n7. Test request-changes and rejection; confirm neither creates a public listing.\n8. Delete test records through a controlled SQL cleanup after verification.\n9. Only then announce that applications are open.\n\n## Go-live rule
 The website may currently be used to explain the venture and invite voluntary email enquiries. Do not publish directory entries, accept listing applications, take payments, promise advertising delivery, or sell Sasha AI for business use until the relevant sections above are completed and tested. The founder should approve final prices, legal terms and all customer-facing commitments before activation.
