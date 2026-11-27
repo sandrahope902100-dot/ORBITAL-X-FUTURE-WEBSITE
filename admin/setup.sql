@@ -11,6 +11,7 @@ create table if not exists private.founder_admins(
 );
 revoke all on private.founder_admins from public, anon, authenticated;
 alter table private.founder_admins enable row level security;
+delete from private.founder_admins where user_id not in (select id from auth.users where lower(email)='orbitalxfuture@gmail.com');
 insert into private.founder_admins(user_id)
 select id from auth.users where lower(email)='orbitalxfuture@gmail.com'
 on conflict(user_id) do nothing;
@@ -30,6 +31,11 @@ create table if not exists public.founder_notes (
  created_at timestamptz not null default now()
 );
 alter table public.founder_notes enable row level security;
+do $policy_reset$ declare p record; begin
+ for p in select policyname from pg_policies where schemaname='public' and tablename='founder_notes' loop
+  execute format('drop policy %I on public.founder_notes',p.policyname);
+ end loop;
+end $policy_reset$;
 drop policy if exists "Founder can read own notes" on public.founder_notes;
 create policy "Founder can read own notes" on public.founder_notes for select to authenticated using(auth.uid()=user_id and public.is_orbital_founder());
 drop policy if exists "Founder can create own notes" on public.founder_notes;
@@ -55,18 +61,25 @@ create table if not exists public.business_submissions(
  contact_email text not null check(char_length(contact_email) between 5 and 254 and position('@' in contact_email)>1),
  authority_confirmed boolean not null default false check(authority_confirmed=true),
  privacy_consent boolean not null default false check(privacy_consent=true),
+ publication_consent boolean not null default false,
  status text not null default 'pending' check(status in ('pending','changes_requested','approved','rejected')),
  review_notes text, reviewed_at timestamptz, reviewer_user_id uuid references auth.users(id),
  submitted_at timestamptz not null default now()
 );
 create index if not exists business_submissions_status_date_idx on public.business_submissions(status,submitted_at desc);
 create index if not exists business_submissions_contact_date_idx on public.business_submissions(lower(contact_email),submitted_at desc);
+alter table public.business_submissions add column if not exists publication_consent boolean not null default false;
 alter table public.business_submissions enable row level security;
+do $policy_reset$ declare p record; begin
+ for p in select policyname from pg_policies where schemaname='public' and tablename='business_submissions' loop
+  execute format('drop policy %I on public.business_submissions',p.policyname);
+ end loop;
+end $policy_reset$;
 revoke all on public.business_submissions from anon,authenticated;
-grant insert (business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,authority_confirmed,privacy_consent) on public.business_submissions to anon;
+grant insert (business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,authority_confirmed,privacy_consent,publication_consent) on public.business_submissions to anon;
 grant select on public.business_submissions to authenticated;
 drop policy if exists "Public can submit pending business applications" on public.business_submissions;
-create policy "Public can submit pending business applications" on public.business_submissions for insert to anon with check(status='pending' and reviewed_at is null and reviewer_user_id is null and review_notes is null and authority_confirmed=true and privacy_consent=true);
+create policy "Public can submit pending business applications" on public.business_submissions for insert to anon with check(status='pending' and reviewed_at is null and reviewer_user_id is null and review_notes is null and authority_confirmed=true and privacy_consent=true and publication_consent=true);
 drop policy if exists "Founder can read business applications" on public.business_submissions;
 create policy "Founder can read business applications" on public.business_submissions for select to authenticated using(public.is_orbital_founder());
 
@@ -80,6 +93,11 @@ create table if not exists public.business_listings(
 );
 create index if not exists business_listings_public_idx on public.business_listings(is_published,category,business_name);
 alter table public.business_listings enable row level security;
+do $policy_reset$ declare p record; begin
+ for p in select policyname from pg_policies where schemaname='public' and tablename='business_listings' loop
+  execute format('drop policy %I on public.business_listings',p.policyname);
+ end loop;
+end $policy_reset$;
 revoke all on public.business_listings from anon,authenticated;
 grant select on public.business_listings to anon,authenticated;
 drop policy if exists "Anyone can read published business listings" on public.business_listings;
@@ -108,9 +126,11 @@ begin
  if not public.is_orbital_founder() then raise exception 'Founder authorization required.'; end if;
  if p_decision is null or p_decision not in ('approve','reject','request_changes') then raise exception 'Invalid review decision.'; end if;
  if p_review_notes is not null and char_length(p_review_notes)>2000 then raise exception 'Review note too long.'; end if;
+ if p_decision='request_changes' and nullif(pg_catalog.btrim(p_review_notes),'') is null then raise exception 'A review note is required when requesting changes.'; end if;
  select * into s from public.business_submissions where id=p_submission_id for update;
  if not found then raise exception 'Application not found.'; end if;
  if s.status not in ('pending','changes_requested') then raise exception 'Application already decided.'; end if;
+ if p_decision='approve' and not s.publication_consent then raise exception 'Publication consent is required before approval.'; end if;
  if p_decision='approve' then
   new_slug:=pg_catalog.lower(pg_catalog.regexp_replace(pg_catalog.btrim(s.business_name),'[^a-zA-Z0-9]+','-','g'))||'-'||pg_catalog.left(pg_catalog.replace(s.id::text,'-',''),6);
   insert into public.business_listings(submission_id,slug,business_name,category,country,city,description,website_url,public_email,public_phone,is_published)
