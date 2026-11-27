@@ -19,12 +19,12 @@ This document separates source-code review from live acceptance testing. A file 
 | Venture identity and ownership | Website identifies ORBITAL X FUTURE as an independent technology venture founded by Sasha-Lee Nugent. It does not claim incorporation. | **Partially complete** — legal registration, legal service-provider identity and business address remain unresolved. |
 | Public website | Static site deployed on Render; automatic deployment from GitHub main is enabled. Founder, product, directory, pricing and policy sections exist. | **Code/deployment complete; live browser QA pending.** |
 | Founder profile and Google visibility | Founder details and JSON-LD structured data exist; a Google site-verification meta token is present. | **Partially complete** — Search Console ownership verification, indexing and search appearance are not independently confirmed. |
-| Directory application form | Public form is coded and remains disabled until the new database readiness RPC returns true. Separate privacy and publication consent are required. | **Code complete; database activation and end-to-end test pending.** |
-| Founder admin and review | Founder sign-in, private application queue, private notes, approve/publish, request changes and reject are coded. | **Code complete; Supabase Auth and live permissions test pending.** |
+| Directory application form | Public form is coded with separate privacy and publication consent. Supabase readiness returns true, but a code-level launch gate keeps applications closed until live browser/Android QA is complete. | **Database active; synthetic DB workflow tests passed; public UI test pending.** |
+| Founder admin and review | Founder sign-in, private application queue, private notes, approve/publish, request changes and reject are coded. Founder Auth email is confirmed and allowlisted; RLS and RPC roles were tested in Supabase. | **Database permissions/workflow verified; actual dashboard sign-in and queue UI test pending.** |
 | Directory public listings | Approved-profile display reads published rows and escapes displayed text. | **First version only** — not a searchable/filterable directory; no pagination beyond the first 60 entries. |
 | Directory moderation and verification | Manual founder review exists. | **Not complete** — no duplicate detection, independent business verification, applicant email verification, correction portal, report/takedown workflow, suspension/removal controls or listing expiry automation. |
 | Pricing and sales | Proposed free and paid tiers are displayed with pre-launch disclosures. | **Proposal only** — no active offer, order/contract workflow, checkout, invoices, subscription handling, cancellation/refund processing or payment acceptance. |
-| Privacy and security | Directory SQL defines RLS, column-level anonymous insert permissions, a founder allowlist and an application rate limit. Sasha has server-side API keys, bounded request sizes, in-memory IP throttles and an in-app provider disclosure. | **Partially complete** — external database state, provider account tiers, retention/deletion, incident response, CAPTCHA and legal review remain pending. |
+| Privacy and security | Directory SQL is active with RLS, column-level anonymous insert permissions, a founder allowlist and an application rate limit. Sasha has server-side API keys, bounded request sizes, in-memory IP throttles and an in-app provider disclosure. | **Partially complete** — fixed retention period, deletion operations, incident response, CAPTCHA, provider account tiers and legal review remain pending. |
 | Sasha AI product | Live general-purpose assistant prototype with streamed text, optional Fish Audio speech, microphone input and PWA shell. | **Supervised demo only** — not approved for paid, confidential-data or unsupervised customer use. |
 | Sasha AI business integration | Optional single-business profile exists in server code. Render startup logs say no business profile is configured. | **Not configured.** |
 | Customer operations | No bookings, CRM, lead capture, payments, human handoff or multi-business account system. | **Not built.** |
@@ -51,7 +51,7 @@ This document separates source-code review from live acceptance testing. A file 
 6. Fixed double-encoded line breaks in applicant email drafts.
 7. Added error handling so network failures do not leave the public submit button stuck disabled or founder review/login/note controls stuck disabled.
 8. Replaced the form's weak “listings table exists” check with the readiness RPC.
-9. Rebuilt the SQL setup as a clean, single-pass script; source checks confirm one definition of each workflow function and balanced dollar-quote blocks. It still has not been executed in Supabase.
+9. Rebuilt the SQL setup as a clean, single-pass script; source checks confirm one definition of each workflow function and balanced dollar-quote blocks. The latest script was applied successfully to the live Supabase project.
 10. Added matching URL and public-email length limits in the form and database, and normalized applicant email before applying the rolling rate limit.
 11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 12. Clarified in the policy notice that the current application form does not accept file or image uploads.
@@ -60,9 +60,9 @@ This document separates source-code review from live acceptance testing. A file 
 
 
 ### What remains blocked
-- The revised admin/setup.sql has **not been executed or verified in Supabase by this audit**. The database state, founder Auth user, confirmed email and public-signup setting are unknown.
-- The public form must remain closed until the revised SQL has run successfully and admin/verify.sql returns directory_portal_ready = true and founder_allowlisted = true.
-- No end-to-end submission, anonymous privacy, founder approval, public publication, request-changes or rejection test has passed in this audit.
+- The latest admin/setup.sql has been applied to the live Supabase project. The confirmed founder Auth user exists and is allowlisted. The public-signup setting has not been independently verified.
+- Supabase reports directory_portal_ready = true and the founder is allowlisted. The public form remains closed through an explicit APPLICATIONS_OPEN=false code gate until live browser/Android QA and operational checks pass.
+- Synthetic role-based database tests passed: anonymous application insert; private submission fields inaccessible to anon; founder approval creates a public listing; request-changes and rejection do not publish. All synthetic records were rolled back. The actual website form and admin UI have not yet been tested in a browser.
 - The three-per-email rate limit is not a substitute for CAPTCHA or IP-based abuse protection. A bot can rotate email addresses and bypass a honeypot.
 - Applicants are not email-verified. The authority checkbox is a declaration, not independent proof of business ownership.
 - No duplicate-business detection, edit portal, listing correction/reporting, suspension/removal interface, expiry automation, photo upload, business self-service or email notification is implemented.
@@ -70,15 +70,15 @@ This document separates source-code review from live acceptance testing. A file 
 - The founder dashboard drafts emails in the user's email app; it does not send them automatically.
 - Existing applications that predate publication consent must not be approved unless consent is collected again.
 
-### Required Supabase activation sequence
-1. Confirm the Supabase Auth user orbitalxfuture@gmail.com exists and the email is confirmed.
-2. Confirm public sign-ups are disabled.
-3. Run the **latest** admin/setup.sql from the website repository in the Supabase SQL Editor.
-4. Run the latest admin/verify.sql.
-5. Confirm the founder is allowlisted, all three tables have RLS enabled, directory_portal_ready is true, and anonymous users cannot read private applicant contact fields.
-6. Test from a separate/private browser: submit an application; verify the founder can see it; approve it; confirm only public profile fields appear; test request changes with a required note; test rejection; confirm neither publishes.
-7. Remove test records safely after testing. Because listings reference submissions, delete a test listing before its linked submission if cleanup is required.
-8. Only then may the application form be opened to real applicants.
+### Supabase activation evidence and remaining go-live checks
+1. [x] Confirmed Auth user `orbitalxfuture@gmail.com` exists and email is confirmed.
+2. [ ] Verify public Auth sign-ups are disabled in Supabase Auth settings; this configuration could not be independently confirmed through the available database checks.
+3. [x] Apply the latest `admin/setup.sql` to the live Supabase project.
+4. [x] Run the latest `admin/verify.sql`; it completed without SQL errors.
+5. [x] Confirm the founder is allowlisted, all three tables have RLS enabled, `directory_portal_ready` is true, and anonymous access to private applicant fields is denied.
+6. [x] Synthetic database transaction tests: anon insert; founder approve/publish; request-changes; reject; confirm no private contact fields are copied into public listings. [ ] Repeat through the actual Android Chrome website form and `/admin/` dashboard.
+7. [x] Synthetic tests were rolled back; the live database has zero application rows and zero public listing rows.
+8. [ ] Keep the form closed until Android/browser UI testing, public-signup configuration verification and remaining privacy/legal operational gates are complete.
 
 **Latest setup file:** admin/setup.sql  
 **Verification file:** admin/verify.sql  
