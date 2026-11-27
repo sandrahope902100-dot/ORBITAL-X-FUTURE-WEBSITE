@@ -443,6 +443,13 @@ as $ready$
   select
     pg_catalog.to_regclass('public.business_submissions') is not null
     and pg_catalog.to_regclass('public.business_listings') is not null
+    and exists (
+      select 1
+      from private.founder_admins f
+      join auth.users u on u.id = f.user_id
+      where lower(u.email) = 'orbitalxfuture@gmail.com'
+        and u.email_confirmed_at is not null
+    )
 
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'business_name', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'category', 'INSERT')
