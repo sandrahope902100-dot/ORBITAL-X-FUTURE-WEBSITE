@@ -2,7 +2,7 @@ const URL="https://xhjtvtnhimqjgdmrxbzf.supabase.co",KEY="sb_publishable_aNNnBlH
 async function loadListings(){
   try{
     const {data,error}=await db.from("business_listings").select("business_name,category,country,city,description,website_url,public_email,public_phone").eq("is_published",true).order("business_name").limit(60);
-    if(error){list.innerHTML='<p class="directory-intro">Approved listings will appear here when the database is activated.</p>';return;}
+    if(error){list.innerHTML='<p class="directory-intro">Approved listings could not be loaded right now. Please try again later.</p>';return;}
     if(!data?.length){list.innerHTML='<p class="directory-intro">No approved businesses yet. Apply for a free Standard Listing.</p>';return;}
     list.innerHTML=data.map(b=>'<article class="directory-card"><span>'+esc(b.category)+'</span><h3>'+esc(b.business_name)+'</h3><p>'+esc(b.city)+', '+esc(b.country)+'</p><p>'+esc(b.description)+'</p><p class="listing-links">'+(b.website_url?'<a href="'+esc(b.website_url)+'" target="_blank" rel="noopener noreferrer">Website ↗</a> ':"")+(b.public_email?'<a href="mailto:'+esc(b.public_email)+'">Email</a> ':"")+(b.public_phone?'<a href="tel:'+esc(b.public_phone)+'">Call</a>':"")+'</p></article>').join("");
   }catch(error){console.error("Directory listings could not load:",error);list.innerHTML='<p class="directory-intro">Approved listings could not be loaded right now.</p>';}
