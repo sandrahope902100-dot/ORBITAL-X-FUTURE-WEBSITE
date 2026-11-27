@@ -28,3 +28,20 @@ orbitalxfuture@gmail.com
 
 ## Product disclosure
 Sasha AI is a supervised demonstration prototype. It is not approved for paid or unsupervised business deployment. See the Sasha AI repository's BUSINESS-READINESS.md for the current engineering assessment.
+
+
+## Pre-launch terms and customer protections (27 November 2026)
+- Public page: `policies.html` (linked from the homepage).
+- Proposed Standard Listing term: 12 months, renewable annually at no charge after business details are reconfirmed and the listing remains eligible.
+- No automatic conversion from a free listing to a paid plan.
+- Proposed paid plans are month-to-month, with no minimum commitment; final cancellation, refund, tax, billing and delivery terms must be supplied in a written order before payment is enabled.
+- Business Plus is described as profile enhancement, not a ranking boost.
+- Featured and Premium are described as sponsored advertising with defined 30-day campaigns and an adjacent Sponsored/Advertisement label.
+- Payment cannot buy verification, favourable reviews, editorial endorsement or guaranteed results.
+- The site currently has no account creation, submission form, listing database, checkout, subscription management, booking, lead-management or analytics dashboard.
+- The privacy notice accurately describes the current email-link-only contact path, Render hosting and Google Fonts dependency. It is a pre-launch notice, not a legal compliance certification.
+- Legal identity, business address, governing law, dispute process, tax handling and jurisdiction-specific consumer/privacy review remain launch blockers.
+- Do not accept money, publish listings, promise delivery or sign paid customers until the directory workflow, written customer order, payment method, cancellation/refund process, and applicable legal review are complete.
+
+## Launch gate
+The website may be used to explain the venture and collect voluntary email enquiries only. It is **not a live directory or paid advertising service**. The website commit deploys automatically through Render; verify the latest deployment is live before announcing changes.
