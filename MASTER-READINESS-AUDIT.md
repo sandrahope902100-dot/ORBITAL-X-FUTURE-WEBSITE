@@ -75,7 +75,7 @@ This document separates source-code review from live acceptance testing. A file 
 2. [ ] Verify public Auth sign-ups are disabled in Supabase Auth settings; this configuration could not be independently confirmed through the available database checks.
 3. [x] Apply the latest `admin/setup.sql` to the live Supabase project.
 4. [x] Run the latest `admin/verify.sql`; it completed without SQL errors.
-5. [x] Confirm the founder is allowlisted, all three tables have RLS enabled, `directory_portal_ready` is true, and anonymous access to private applicant fields is denied.
+5. [x] Confirm the founder is allowlisted, all four application/admin tables have RLS enabled, `directory_portal_ready` is true, and anonymous access to private applicant fields is denied.
 6. [x] Synthetic database transaction tests: anon insert; founder approve/publish; request-changes; reject; confirm no private contact fields are copied into public listings. [ ] Repeat through the actual Android Chrome website form and `/admin/` dashboard.
 7. [x] Synthetic tests were rolled back; the live database has zero application rows and zero public listing rows.
 8. [ ] Keep the form closed until Android/browser UI testing, public-signup configuration verification and remaining privacy/legal operational gates are complete.
