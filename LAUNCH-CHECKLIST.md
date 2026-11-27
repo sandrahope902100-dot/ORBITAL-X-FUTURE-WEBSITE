@@ -17,8 +17,8 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Obtain jurisdiction-specific legal review and confirm the final service provider identity, business contact address, governing law, dispute process and tax treatment.
 
 ## B. Directory product — NOT COMPLETE
-- [ ] Build a real searchable directory database.
-- [x] Build the first business submission form with separate privacy and publication consent; **database activation and end-to-end testing are still pending**.
+- [x] Create Supabase storage for private business applications and approved public listings. [ ] Add public search, filters and pagination.
+- [x] Build the first business submission form with separate privacy and publication consent; Supabase is active and core role-based database workflow tests passed. [ ] Complete live browser/Android form testing; form remains closed.
 - [x] Add a database readiness RPC that checks the confirmed founder allowlist, required anonymous insert grants, private-field read restrictions and RLS policies before enabling the public form.
 - [ ] Build duplicate detection and business-claim ownership checks; current workflow uses an applicant authority declaration only.
 - [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions; suspension/removal controls remain pending.
@@ -40,9 +40,9 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Do not accept manual transfers or promise placements before the written order and delivery process are ready.
 
 ## D. Privacy, security and trust
-- [x] Founder-only admin login and business application/review interfaces are implemented in code; database activation and end-to-end testing remain pending.
+- [x] Founder-only admin login and business application/review interfaces are implemented; Supabase is active, founder is confirmed/allowlisted and core database workflow tests passed. [ ] Test actual dashboard sign-in and queue UI.
 - [x] No public customer account system, checkout or subscription management is implemented.
-- [x] General contact route is an email link; business application form code is present but remains disabled until Supabase setup is verified. Visitors are warned not to send sensitive data.
+- [x] General contact route is an email link; business application form is intentionally disabled pending live browser/Android acceptance testing. Visitors are warned not to send sensitive data.
 - [ ] Decide what personal/business data will be collected when the directory launches and collect only what is necessary.
 - [ ] Set retention and deletion periods, access controls, backup protection and incident response.
 - [ ] Review hosting, email, analytics and payment processors as data processors/service providers.
@@ -65,17 +65,17 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Verify Google Search Console ownership and indexing directly; a verification meta tag alone is not proof of verification or indexing.
 - [ ] Complete legal registration and any tax/business registrations when financially and legally appropriate. Do not claim registration before it exists.
 
-## Directory activation steps (not yet complete)
+## Remaining directory go-live checks
 
-1. Confirm the Supabase Auth user `orbitalxfuture@gmail.com` exists and its email is confirmed.
+1. [x] Confirm the Supabase Auth user `orbitalxfuture@gmail.com` exists and its email is confirmed.
 2. Confirm public sign-ups are disabled.
-3. Run the complete `admin/setup.sql` in Supabase SQL Editor. It seeds the founder UUID allowlist if the Auth user already exists. If the user is created afterward, run the SQL again to seed the allowlist.
-4. Open `/admin/` and verify founder sign-in, pending queue and review actions.
-5. Submit a test application from a separate browser/private session; confirm anonymous access cannot read it.
-6. Approve the test application; confirm only the public business profile appears on the homepage and private applicant contact details remain hidden.
-7. Test request-changes and rejection; confirm neither creates a public listing.
-8. Delete test records through a controlled SQL cleanup after verification.
-9. Only then announce that applications are open.
+3. [x] Apply the latest `admin/setup.sql`; the founder UUID allowlist was seeded.
+4. [ ] Open `/admin/` in Android Chrome and verify founder sign-in, pending queue and review actions.
+5. [x] Role-based database test: anonymous insert permitted; anonymous read and mutation privileges denied. [ ] Repeat through the actual public form in a separate/private browser.
+6. [x] Synthetic database transaction test: founder approval created one public listing while private applicant fields remained in the private submissions table; test was rolled back. [ ] Verify the same through the live UI.
+7. [x] Synthetic database transaction tests confirmed request-changes and rejection create no public listing; tests were rolled back.
+8. [x] Test records were rolled back; live database currently contains zero submissions and zero listings.
+9. [ ] Keep applications closed until all browser/device checks and legal/operational gates pass.
 
 ## Go-live rule
 The website may currently be used to explain the venture and invite voluntary email enquiries. Do not publish directory entries, accept listing applications, take payments, promise advertising delivery, or sell Sasha AI for business use until the relevant sections above are completed and tested. The founder should approve final prices, legal terms and all customer-facing commitments before activation.
