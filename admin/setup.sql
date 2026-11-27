@@ -63,7 +63,7 @@ create index if not exists business_submissions_status_date_idx on public.busine
 create index if not exists business_submissions_contact_date_idx on public.business_submissions(lower(contact_email),submitted_at desc);
 alter table public.business_submissions enable row level security;
 revoke all on public.business_submissions from anon,authenticated;
-grant insert on public.business_submissions to anon;
+grant insert (business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,authority_confirmed,privacy_consent) on public.business_submissions to anon;
 grant select on public.business_submissions to authenticated;
 drop policy if exists "Public can submit pending business applications" on public.business_submissions;
 create policy "Public can submit pending business applications" on public.business_submissions for insert to anon with check(status='pending' and reviewed_at is null and reviewer_user_id is null and review_notes is null and authority_confirmed=true and privacy_consent=true);
