@@ -17,14 +17,16 @@ async function review(id,decision,button){
  if(decision==="reject"&&!confirm("Reject this application?"))return;
  button.disabled=true;
  msg("applicationMessage","Saving decision…");
+ let saved=false;
  try{
   const {error}=await db.rpc("review_business_submission",{p_submission_id:id,p_decision:decision,p_review_notes:reviewNote||null});
   if(error){msg("applicationMessage","Not saved: "+error.message);return;}
-  msg("applicationMessage","Decision saved.");
+  saved=true;
+  msg("applicationMessage","Decision saved. Refreshing the queue…");
   await loadApps();
  }catch(error){
   console.error("Directory review action failed:",error);
-  msg("applicationMessage","The decision could not be saved because of a connection problem. Refresh and check the application status before trying again.");
+  msg("applicationMessage",saved?"Decision saved, but the queue could not refresh. Use Refresh to verify.":"The decision could not be saved because of a connection problem. Refresh and check the application status before trying again.");
  }finally{
   button.disabled=false;
  }
