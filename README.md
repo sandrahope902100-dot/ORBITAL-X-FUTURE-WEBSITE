@@ -19,7 +19,7 @@ orbitalxfuture@gmail.com
 ## Current business status
 - ORBITAL X FUTURE is described publicly as an independent technology venture. Do not describe it as incorporated or registered.
 - The website is an informational pre-launch site. The directory application interface is present but remains disabled until the database is configured and verified.
-- The directory submission form, founder review dashboard and public approved-listing display are implemented in code. The Supabase database has not yet been confirmed active, and the complete submission-to-publication workflow has not passed end-to-end testing. The directory must therefore remain closed until activation and tests pass.
+- The directory submission form, founder review dashboard and public approved-listing display are implemented in code. Supabase is activated and the core role-based database workflow has been tested with synthetic records (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
 - Pricing shown on the website is proposed introductory pricing only. It is not an active checkout offer.
 - No payments are currently accepted through the website.
 - Paid placements, listing management, billing, cancellation/refund terms and delivery processes must be finalized before taking payment.
@@ -38,8 +38,8 @@ Sasha AI is a supervised demonstration prototype. It is not approved for paid or
 - Business Plus is described as profile enhancement, not a ranking boost.
 - Featured and Premium are described as sponsored advertising with defined 30-day campaigns and an adjacent Sponsored/Advertisement label.
 - Payment cannot buy verification, favourable reviews, editorial endorsement or guaranteed results.
-- The site currently has no public customer accounts, business self-service editing, checkout, subscription management, booking, lead-management or analytics dashboard. The founder-only admin login and business application/review code exist; database activation and end-to-end tests remain outstanding.
-- The privacy notice describes the planned application data flow, Supabase storage, Render hosting and Google Fonts dependency. It is a pre-launch notice, not a legal compliance certification.
+- The site currently has no public customer accounts, business self-service editing, checkout, subscription management, booking, lead-management or analytics dashboard. The founder-only admin login and business application/review code exist; Supabase is active and the core database workflow has passed synthetic role-based tests. Actual dashboard sign-in and browser-based form acceptance tests remain outstanding.
+- The privacy notice describes the application data flow, Supabase storage, Render hosting, the esm.sh SDK CDN and Google Fonts. It discloses that no fixed application-record retention period has been set. It remains a pre-launch notice, not a legal compliance certification.
 - Legal identity, business address, governing law, dispute process, tax handling and jurisdiction-specific consumer/privacy review remain launch blockers.
 - Do not accept money, publish listings, promise delivery or sign paid customers until the directory workflow, written customer order, payment method, cancellation/refund process, and applicable legal review are complete.
 
@@ -56,6 +56,6 @@ The website may be used to explain the venture and collect voluntary email enqui
 - Approve creates a public listing; request-changes and reject do not publish.
 - Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table.
 - Database limit: 3 applications per contact email per rolling 24 hours; form honeypot supplements it. CAPTCHA is not yet included.
-- Run the full admin/setup.sql in Supabase SQL Editor. Public sign-ups must remain disabled and founder email confirmed.
+- The latest admin/setup.sql has been applied and admin/verify.sql has been run successfully. The founder email is confirmed and allowlisted. Verify that public sign-ups remain disabled; this Auth setting has not yet been independently confirmed.
 - No file uploads, business self-service editing, payments, subscriptions or customer accounts in this first version.
-- Do not announce applications as open until SQL setup has succeeded and test submissions have been reviewed.
+- Do not announce applications as open until the Android/browser form test, founder dashboard sign-in test, retention/legal review and remaining launch checks are complete. The form is intentionally closed in assets/directory.js (APPLICATIONS_OPEN=false).
