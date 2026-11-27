@@ -69,7 +69,22 @@ async function review(id,decision,button){
   button.disabled=false;
  }
 }
-async function init(){if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});ready=true;const {data:{session}}=await db.auth.getSession();if(session&&!isFounder(session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}show(Boolean(session));if(session)await Promise.all([notes(),loadApps()]);}
+async function init(){
+ if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}
+ try{
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  ready=true;
+  const {data,error}=await db.auth.getSession();
+  if(error)throw error;
+  const session=data?.session;
+  if(session&&!isFounder(session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}
+  show(Boolean(session));
+  if(session)await Promise.all([notes(),loadApps()]);
+ }catch(error){
+  console.error("Founder dashboard initialization failed:",error);
+  msg("loginMessage","Secure sign-in could not connect. Check your connection and try again.");
+ }
+}
 $("loginForm").addEventListener("submit",async e=>{
  e.preventDefault();
  if(!ready)return;
