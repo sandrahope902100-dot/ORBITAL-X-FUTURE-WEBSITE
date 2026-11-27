@@ -77,6 +77,119 @@ do $input_limits$ begin
  if not exists(select 1 from pg_catalog.pg_constraint where conname='business_submissions_public_email_length_check' and conrelid='public.business_submissions'::regclass) then
   alter table public.business_submissions add constraint business_submissions_public_email_length_check check(public_email is null or public_email='' or char_length(public_email)<=254) not valid;
  end if;
+ if not exists(select 1 from pg_catalog.pg_constraint where conname='business_submissions_contact_email_format_check' and conrelid='public.business_submissions'::regclass) then
+  alter table public.business_submissions add constraint business_submissions_contact_email_format_check check(contact_email=pg_catalog.lower(pg_catalog.btrim(contact_email)) and contact_email ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}
+alter table public.business_submissions enable row level security;
+do $policy_reset$ declare p record; begin
+ for p in select policyname from pg_policies where schemaname='public' and tablename='business_submissions' loop
+  execute format('drop policy %I on public.business_submissions',p.policyname);
+ end loop;
+end $policy_reset$;
+revoke all on public.business_submissions from public,anon,authenticated;
+grant insert (business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,authority_confirmed,privacy_consent,publication_consent) on public.business_submissions to anon;
+grant select on public.business_submissions to authenticated;
+drop policy if exists "Public can submit pending business applications" on public.business_submissions;
+create policy "Public can submit pending business applications" on public.business_submissions for insert to anon with check(status='pending' and reviewed_at is null and reviewer_user_id is null and review_notes is null and authority_confirmed=true and privacy_consent=true and publication_consent=true);
+drop policy if exists "Founder can read business applications" on public.business_submissions;
+create policy "Founder can read business applications" on public.business_submissions for select to authenticated using(public.is_orbital_founder());
+
+create table if not exists public.business_listings(
+ id uuid primary key default gen_random_uuid(),
+ submission_id uuid not null unique references public.business_submissions(id) on delete restrict,
+ slug text not null unique,
+ business_name text not null, category text not null, country text not null, city text not null,
+ description text not null, website_url text, public_email text, public_phone text,
+ is_published boolean not null default true, published_at timestamptz not null default now()
+);
+create index if not exists business_listings_public_idx on public.business_listings(is_published,category,business_name);
+alter table public.business_listings enable row level security;
+do $policy_reset$ declare p record; begin
+ for p in select policyname from pg_policies where schemaname='public' and tablename='business_listings' loop
+  execute format('drop policy %I on public.business_listings',p.policyname);
+ end loop;
+end $policy_reset$;
+revoke all on public.business_listings from public,anon,authenticated;
+grant select on public.business_listings to anon,authenticated;
+drop policy if exists "Anyone can read published business listings" on public.business_listings;
+create policy "Anyone can read published business listings" on public.business_listings for select to anon,authenticated using(is_published=true);
+drop policy if exists "Founder can read all business listings" on public.business_listings;
+create policy "Founder can read all business listings" on public.business_listings for select to authenticated using(public.is_orbital_founder());
+
+-- Rate limit: three applications per contact email per rolling 24 hours.
+create or replace function private.enforce_business_submission_rate_limit() returns trigger language plpgsql security definer set search_path='' as $$
+declare n integer;
+begin
+ new.contact_email:=pg_catalog.lower(pg_catalog.btrim(new.contact_email));
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(new.contact_email,0));
+ select count(*) into n from public.business_submissions where pg_catalog.lower(contact_email)=pg_catalog.lower(new.contact_email) and submitted_at>now()-interval '24 hours';
+ if n>=3 then raise exception 'Submission limit reached for this contact email. Please try again later.'; end if;
+ return new;
+end; $$;
+revoke all on function private.enforce_business_submission_rate_limit() from public,anon,authenticated;
+drop trigger if exists business_submission_rate_limit on public.business_submissions;
+create trigger business_submission_rate_limit before insert on public.business_submissions for each row execute function private.enforce_business_submission_rate_limit();
+
+-- Only the verified founder can decide. Approval publishes atomically.
+create or replace function public.review_business_submission(p_submission_id uuid,p_decision text,p_review_notes text default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare s public.business_submissions%rowtype; new_slug text;
+begin
+ if not public.is_orbital_founder() then raise exception 'Founder authorization required.'; end if;
+ if p_decision is null or p_decision not in ('approve','reject','request_changes') then raise exception 'Invalid review decision.'; end if;
+ if p_review_notes is not null and char_length(p_review_notes)>2000 then raise exception 'Review note too long.'; end if;
+ if p_decision='request_changes' and nullif(pg_catalog.btrim(p_review_notes),'') is null then raise exception 'A review note is required when requesting changes.'; end if;
+ select * into s from public.business_submissions where id=p_submission_id for update;
+ if not found then raise exception 'Application not found.'; end if;
+ if s.status not in ('pending','changes_requested') then raise exception 'Application already decided.'; end if;
+ if p_decision='approve' and not s.publication_consent then raise exception 'Publication consent is required before approval.'; end if;
+ if p_decision='approve' then
+  new_slug:=pg_catalog.lower(pg_catalog.regexp_replace(pg_catalog.btrim(s.business_name),'[^a-zA-Z0-9]+','-','g'))||'-'||pg_catalog.left(pg_catalog.replace(s.id::text,'-',''),6);
+  insert into public.business_listings(submission_id,slug,business_name,category,country,city,description,website_url,public_email,public_phone,is_published)
+  values(s.id,new_slug,s.business_name,s.category,s.country,s.city,s.description,nullif(s.website_url,''),nullif(s.public_email,''),nullif(s.public_phone,''),true);
+  update public.business_submissions set status='approved',review_notes=nullif(p_review_notes,''),reviewed_at=now(),reviewer_user_id=auth.uid() where id=s.id;
+ elsif p_decision='reject' then
+  update public.business_submissions set status='rejected',review_notes=nullif(p_review_notes,''),reviewed_at=now(),reviewer_user_id=auth.uid() where id=s.id;
+ else
+  update public.business_submissions set status='changes_requested',review_notes=nullif(p_review_notes,''),reviewed_at=now(),reviewer_user_id=auth.uid() where id=s.id;
+ end if;
+ return pg_catalog.jsonb_build_object('success',true,'decision',p_decision,'submission_id',s.id);
+end; $$;
+revoke all on function public.review_business_submission(uuid,text,text) from public,anon;
+grant execute on function public.review_business_submission(uuid,text,text) to authenticated;
+
+-- A small readiness RPC prevents the public form from opening after a partial or
+-- misconfigured setup. It exposes only a boolean and no application data.
+create or replace function public.directory_portal_ready()
+returns boolean language sql stable security definer set search_path=''
+as $ready$
+ select
+  pg_catalog.to_regclass('public.business_submissions') is not null
+  and pg_catalog.to_regclass('public.business_listings') is not null
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','business_name','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','category','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','country','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','city','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','description','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','website_url','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','public_email','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','public_phone','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','authority_confirmed','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','privacy_consent','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_name','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','INSERT')
+  and pg_catalog.has_column_privilege('anon','public.business_submissions','publication_consent','INSERT')
+  and not pg_catalog.has_column_privilege('anon','public.business_submissions','contact_name','SELECT')
+  and not pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','SELECT')
+  and pg_catalog.has_table_privilege('anon','public.business_listings','SELECT')
+  and exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='business_submissions' and c.relrowsecurity)
+  and exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='business_listings' and c.relrowsecurity)
+  and exists(select 1 from pg_catalog.pg_policies where schemaname='public' and tablename='business_submissions' and policyname='Public can submit pending business applications' and cmd='INSERT')
+  and exists(select 1 from pg_catalog.pg_policies where schemaname='public' and tablename='business_listings' and policyname='Anyone can read published business listings' and cmd='SELECT');
+$ready$;
+revoke all on function public.directory_portal_ready() from public,anon,authenticated;
+grant execute on function public.directory_portal_ready() to anon;
+) not valid;
+ end if;
 end $input_limits$;
 alter table public.business_submissions enable row level security;
 do $policy_reset$ declare p record; begin
