@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://orbital-x-future.onrender.com/sitemap.xml
