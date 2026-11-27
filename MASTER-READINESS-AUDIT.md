@@ -18,7 +18,7 @@ This document separates source-code review from live acceptance testing. A file 
 |---|---|---|
 | Venture identity and ownership | Website identifies ORBITAL X FUTURE as an independent technology venture founded by Sasha-Lee Nugent. It does not claim incorporation. | **Partially complete** — legal registration, legal service-provider identity and business address remain unresolved. |
 | Public website | Static site deployed on Render; automatic deployment from GitHub main is enabled. Founder, product, directory, pricing and policy sections exist. | **Code/deployment complete; live browser QA pending.** |
-| Founder profile and Google visibility | Founder details and JSON-LD structured data exist; a Google site-verification meta token is present. | **Partially complete** — Search Console ownership verification, indexing and search appearance are not independently confirmed. |
+| Founder profile and Google visibility | Founder details, JSON-LD, `robots.txt`, `sitemap.xml` and a Google site-verification meta token are present. No favicon or social-share image was found. | **Partially complete** — Search Console ownership verification, indexing and search appearance are not independently confirmed. |
 | Directory application form | Public form is coded with separate privacy and publication consent. Supabase readiness returns true, but a code-level launch gate keeps applications closed until live browser/Android QA is complete. | **Database active; synthetic DB workflow tests passed; public UI test pending.** |
 | Founder admin and review | Founder sign-in, private application queue, private notes, approve/publish, request changes and reject are coded. Founder Auth email is confirmed and allowlisted; RLS and RPC roles were tested in Supabase. | **Database permissions/workflow verified; actual dashboard sign-in and queue UI test pending.** |
 | Directory public listings | Approved-profile display reads published rows and escapes displayed text. | **First version only** — not a searchable/filterable directory; no pagination beyond the first 60 entries. |
@@ -153,8 +153,8 @@ This document separates source-code review from live acceptance testing. A file 
 ## 9. Closure order — freeze new features
 
 1. **Directory browser acceptance:** test the actual public form and founder dashboard in Android Chrome; verify public Auth sign-ups are disabled.
-2. **Directory acceptance tests:** anonymous submit/privacy, founder queue, approve/publish, request changes, reject, test cleanup.
-3. **Website QA:** Android Chrome, navigation, form validation, policy links, accessibility and mobile layout.
+2. **Directory test status:** database role-based tests are complete and passed; only the actual Android/browser form and dashboard journey remains to be tested.
+3. **Website QA:** Android Chrome, navigation, closed-form state, policy links, accessibility, SEO metadata and mobile layout.
 4. **Sasha deployment verification:** latest deployment is live and startup logs show the process running; configure `/healthz` as the Render health-check path and complete a direct HTTP test.
 5. **Sasha acceptance tests:** text, context, action truthfulness, provider failure, timeout, voice, microphone, PWA and abuse limits.
 6. **Provider/privacy decisions:** confirm Gemini account tier and data handling; recheck Fish Audio terms before 1 December 2026; decide fallback.
