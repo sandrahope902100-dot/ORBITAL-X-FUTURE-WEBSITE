@@ -55,8 +55,8 @@ create table if not exists public.business_submissions(
  country text not null check(char_length(btrim(country)) between 2 and 80),
  city text not null check(char_length(btrim(city)) between 1 and 100),
  description text not null check(char_length(btrim(description)) between 80 and 1500),
- website_url text check(website_url is null or website_url='' or website_url ~* '^https?://'),
- public_email text check(public_email is null or public_email='' or position('@' in public_email)>1),
+ website_url text check(website_url is null or website_url='' or (char_length(website_url)<=300 and website_url ~* '^https?://')),
+ public_email text check(public_email is null or public_email='' or (char_length(public_email)<=254 and position('@' in public_email)>1)),
  public_phone text check(public_phone is null or char_length(public_phone) between 7 and 30),
  contact_name text not null check(char_length(btrim(contact_name)) between 2 and 100),
  contact_email text not null check(char_length(contact_email) between 5 and 254 and position('@' in contact_email)>1),
@@ -70,6 +70,14 @@ create table if not exists public.business_submissions(
 create index if not exists business_submissions_status_date_idx on public.business_submissions(status,submitted_at desc);
 create index if not exists business_submissions_contact_date_idx on public.business_submissions(lower(contact_email),submitted_at desc);
 alter table public.business_submissions add column if not exists publication_consent boolean not null default false;
+do $input_limits$ begin
+ if not exists(select 1 from pg_catalog.pg_constraint where conname='business_submissions_website_url_length_check' and conrelid='public.business_submissions'::regclass) then
+  alter table public.business_submissions add constraint business_submissions_website_url_length_check check(website_url is null or website_url='' or char_length(website_url)<=300) not valid;
+ end if;
+ if not exists(select 1 from pg_catalog.pg_constraint where conname='business_submissions_public_email_length_check' and conrelid='public.business_submissions'::regclass) then
+  alter table public.business_submissions add constraint business_submissions_public_email_length_check check(public_email is null or public_email='' or char_length(public_email)<=254) not valid;
+ end if;
+end $input_limits$;
 alter table public.business_submissions enable row level security;
 do $policy_reset$ declare p record; begin
  for p in select policyname from pg_policies where schemaname='public' and tablename='business_submissions' loop
