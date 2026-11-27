@@ -139,8 +139,8 @@ This document separates source-code review from live acceptance testing. A file 
 
 ## 7. Deployment evidence
 
-- Website Render service: static site, branch main, automatic deployment enabled. Latest website commit 124a95a8f483270110ff63c95ed9d487b1b78d3b is live in deploy dep-dc4utc4o3iic73d133fg.
-- Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. Latest deployed source commit 49a1ed210d73fe2b0cf153dd1c144988b00f7c7d is live in deploy dep-dc4ut197lnhs739vr1cg.
+- Website Render service: static site, branch main, automatic deployment enabled. The latest functional website code commit 124a95a8f483270110ff63c95ed9d487b1b78d3b is live; the current master-audit/documentation commit 93f2e95ed480c43c8f8389e552e5876b8b00b93e is also live in deploy dep-dc4uu4lbedkc73e5vcg.
+- Sasha AI Render service: Node web service, Free plan, one instance, Oregon, manual deployment. Application source commit 26464cfce26ef2644c151b2b00f9082b0764d36a is live in deploy dep-dc4ut197lnhs739vr1cg (deployed from branch head 49a1ed210d73fe2b0cf153dd1c144988b00f7c7d).
 - A live deployment proves the deployment completed; it does not prove database, provider or user-journey acceptance tests passed.
 - No direct live HTTP result for /healthz, /api/config, the website homepage or the admin login was recorded in this audit. Browser/device verification remains pending.
 
