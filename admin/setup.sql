@@ -17,7 +17,7 @@ on conflict(user_id) do nothing;
 
 create or replace function public.is_orbital_founder()
 returns boolean language sql stable security definer set search_path=''
-as $ select exists(select 1 from private.founder_admins where user_id=auth.uid()) $;
+as $founder$ select exists(select 1 from private.founder_admins where user_id=auth.uid()) $founder$;
 revoke all on function public.is_orbital_founder() from public, anon;
 grant execute on function public.is_orbital_founder() to authenticated;
 
