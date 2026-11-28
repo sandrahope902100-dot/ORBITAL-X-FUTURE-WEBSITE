@@ -37,8 +37,8 @@ This document separates source-code review from live acceptance testing. A file 
 - Separate required applicant privacy consent and consent to publish the business profile if approved.
 - Founder-only review dashboard with pending/change-requested queue.
 - Approve/publish, request changes and reject decisions through a protected database RPC.
-- Public directory reads only published business-profile records; applicant contact name/email and private review notes are not copied to the public listing table.
-- Three-submissions-per-contact-email rolling 24-hour database limit, plus a honeypot.
+- Public directory reads only published, unexpired business-profile records; applicant contact name/email and private review notes are not copied to the public listing table. Search supports business/service text, category and location filters with 12-item pagination.
+- Three-submissions-per-contact-email rolling 24-hour database limit, duplicate protection for active applications by normalized email/business name, plus a honeypot.
 - The directory_portal_ready RPC checks public-schema tables, anonymous insert grants, RLS, required policies, the email rate-limit trigger, founder review RPC permissions and private-field read restrictions. It now runs as SECURITY INVOKER and does not inspect private Auth data. Founder identity is independently verified by the founder RPC and again inside the review RPC.
 - admin/verify.sql checks founder allowlisting, RLS, policies, readiness/search function privileges, anonymous access to private contact fields, moderation grants and duplicate-index presence.
 
