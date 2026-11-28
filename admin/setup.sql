@@ -592,3 +592,55 @@ $ready$;
 
 revoke all on function public.directory_portal_ready() from public, anon, authenticated;
 grant execute on function public.directory_portal_ready() to anon, authenticated;
+
+
+-- Public listing correction and safety reports. Private reporter contact is never public.
+create table if not exists public.directory_reports (
+ id uuid primary key default gen_random_uuid(),
+ listing_id uuid references public.business_listings(id) on delete set null,
+ listing_name text not null check (char_length(btrim(listing_name)) between 1 and 120),
+ reason text not null check (reason in ('incorrect_information','business_not_authorized','misleading_claim','closed_business','other')),
+ details text not null check (char_length(btrim(details)) between 20 and 1500),
+ contact_email text not null check (char_length(btrim(contact_email)) between 5 and 254),
+ status text not null default 'open' check (status in ('open','investigating','resolved','dismissed')),
+ founder_notes text,
+ created_at timestamptz not null default now(),
+ resolved_at timestamptz
+);
+alter table public.directory_reports enable row level security;
+revoke all on public.directory_reports from public,anon,authenticated;
+grant insert (listing_id,listing_name,reason,details,contact_email) on public.directory_reports to anon,authenticated;
+grant select on public.directory_reports to authenticated;
+grant update (status,founder_notes,resolved_at) on public.directory_reports to authenticated;
+drop policy if exists "Anyone can submit directory reports" on public.directory_reports;
+create policy "Anyone can submit directory reports"
+on public.directory_reports for insert to anon,authenticated
+with check (status='open' and founder_notes is null and resolved_at is null);
+drop policy if exists "Founder can read directory reports" on public.directory_reports;
+create policy "Founder can read directory reports"
+on public.directory_reports for select to authenticated
+using ((select public.is_orbital_founder()));
+drop policy if exists "Founder can update directory reports" on public.directory_reports;
+create policy "Founder can update directory reports"
+on public.directory_reports for update to authenticated
+using ((select public.is_orbital_founder()))
+with check ((select public.is_orbital_founder()));
+create index if not exists directory_reports_status_created_idx on public.directory_reports(status,created_at desc);
+create index if not exists directory_reports_listing_id_idx on public.directory_reports(listing_id);
+create index if not exists directory_reports_email_created_idx on public.directory_reports(lower(contact_email),created_at desc);
+
+create or replace function public.limit_directory_reports()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare recent_count integer;
+begin
+ select count(*) into recent_count from public.directory_reports r
+ where lower(r.contact_email)=lower(new.contact_email) and r.created_at>now()-interval '24 hours';
+ if recent_count>=5 then raise exception 'Report limit reached. Please try again later.'; end if;
+ return new;
+end;
+$$;
+revoke all on function public.limit_directory_reports() from public,anon,authenticated;
+drop trigger if exists directory_report_rate_limit on public.directory_reports;
+create trigger directory_report_rate_limit before insert on public.directory_reports
+for each row execute function public.limit_directory_reports();
