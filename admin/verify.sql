@@ -83,3 +83,20 @@ select
   (select count(*) from public.business_submissions) as total_applications,
   (select count(*) from public.business_listings where is_published=true) as published_listings,
   (select count(*) from public.business_listings where is_published=false) as hidden_listings;
+
+
+-- 8. Verify listing expiry is enforced and the founder can renew/hide listings.
+select
+  exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='business_listings' and column_name='expires_at'
+  ) as expiry_column_exists,
+  has_column_privilege('anon','public.business_listings','expires_at','SELECT') as public_expiry_date_visible,
+  has_column_privilege('anon','public.business_listings','expires_at','UPDATE') as anon_can_change_expiry,
+  has_column_privilege('authenticated','public.business_listings','expires_at','UPDATE') as authenticated_role_can_update_expiry,
+  exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='business_listings'
+      and policyname='Anyone can read published business listings'
+      and qual like '%expires_at%'
+  ) as public_policy_checks_expiry;
