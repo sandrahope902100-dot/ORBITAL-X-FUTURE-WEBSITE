@@ -21,7 +21,7 @@ async function notes(){
 }
 async function approved(){
  try{
-  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at,expires_at,subscription_plan,billing_currency,monthly_amount,renewal_payment_status").order("published_at",{ascending:false});
+  const {data,error}=await db.from("business_listings").select("id,submission_id,business_name,category,city,country,is_published,published_at,expires_at,subscription_plan,billing_currency,monthly_amount,renewal_payment_status").order("published_at",{ascending:false});
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
   if(data?.length){
    const {data:contacts}=await db.from("business_submissions").select("id,contact_email,contact_name").in("id",data.map(x=>x.submission_id));
