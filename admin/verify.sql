@@ -12,14 +12,14 @@ select n.nspname as schema_name, c.relname as table_name, c.relrowsecurity as rl
 from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
-  and c.relname in ('business_submissions','business_listings','founder_notes')
+  and c.relname in ('business_submissions','business_listings','founder_notes','directory_reports')
 order by c.relname;
 
 -- 3. Review the policies currently installed.
 select schemaname, tablename, policyname, roles, cmd
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('business_submissions','business_listings','founder_notes')
+  and tablename in ('business_submissions','business_listings','founder_notes','directory_reports')
 order by tablename, policyname;
 
 -- 4. Confirm the public application portal's minimum grants and RLS policies.
@@ -108,7 +108,7 @@ select
   position('A review note is required for this decision.' in pg_get_functiondef('public.review_business_submission(uuid,text,text)'::regprocedure)) > 0 as rejection_and_change_notes_required;
 
 
--- 9. Directory reports are insert-only for the public; only the founder can read/update them.
+-- 10. Directory reports are insert-only for the public; only the founder can read/update them.
 select
   exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
          where n.nspname='public' and c.relname='directory_reports' and c.relrowsecurity) as reports_rls_enabled,
