@@ -10,7 +10,7 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [x] Describe Sasha AI as a supervised demonstration prototype.
 - [x] Disclose that the directory is not live and that enquiries do not create listings.
 - [x] Show proposed pricing as indicative only; state that no payment is accepted.
-- [x] State the proposed 12-month Standard Listing term and free annual renewal, subject to review.
+- [x] State the 12-month Standard Listing term and free annual renewal after business reconfirmation, subject to review.
 - [x] Prohibit automatic conversion from free to paid.
 - [x] Separate paid advertising from verification, editorial opinion and ordinary listing order.
 - [x] Publish a pre-launch service terms and privacy notice.
