@@ -18,6 +18,7 @@ function clearFounderWorkspace(){
  }
  if($("mfaSecret"))$("mfaSecret").textContent="";
  if($("mfaQrImage"))$("mfaQrImage").removeAttribute("src");
+ paymentSettings={jamaica_instructions:"",international_instructions:""};
  mfaFactorId=null;mfaChallengeId=null;mfaMode=null;
 }
 function show(on){
