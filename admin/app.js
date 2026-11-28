@@ -9,7 +9,23 @@ async function verifyFounder(session){
  const {data,error}=await db.rpc("is_orbital_founder_identity");
  return !error&&data===true;
 }
-function show(on){$("loginView").hidden=on;$("dashboardView").hidden=!on;if(on)$("mfaGate").hidden=true;}
+function clearFounderWorkspace(){
+ for(const id of ["applicationsList","paymentQueue","approvedListings","directoryReports","notesList"]){
+  const node=$(id);if(node)node.textContent="";
+ }
+ for(const id of ["jamaicaPaymentInstructions","internationalPaymentInstructions","mfaCode"]){
+  const node=$(id);if(node)node.value="";
+ }
+ if($("mfaSecret"))$("mfaSecret").textContent="";
+ if($("mfaQrImage"))$("mfaQrImage").removeAttribute("src");
+ mfaFactorId=null;mfaChallengeId=null;mfaMode=null;
+}
+function show(on){
+ $("loginView").hidden=on;
+ $("dashboardView").hidden=!on;
+ if(on)$("mfaGate").hidden=true;
+ else clearFounderWorkspace();
+}
 function showMfaGate(){ $("loginView").hidden=true;$("dashboardView").hidden=true;$("mfaGate").hidden=false; }
 async function openFounderDashboard(){
  $("mfaGate").hidden=true;show(true);
@@ -307,6 +323,15 @@ async function init(){
  if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}
  try{
   db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // Clear previously loaded private founder data when this session signs out in any tab.
+  db.auth.onAuthStateChange((event,session)=>{
+   if(event==="SIGNED_OUT"||(!session&&event!=="INITIAL_SESSION")){
+    show(false);
+    $("mfaGate").hidden=true;
+    $("loginForm").reset();
+    msg("loginMessage","Your founder session has ended. Sign in again.");
+   }
+  });
   ready=true;
   const {data,error}=await db.auth.getSession();
   if(error)throw error;
