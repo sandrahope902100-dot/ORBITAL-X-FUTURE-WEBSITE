@@ -1,6 +1,6 @@
 # ORBITAL X FUTURE — Launch Readiness Checklist
 
-**Review date:** 27 November 2026  
+**Review date:** 28 November 2026  
 **Current decision:** Pre-launch information and enquiry website only. The directory and paid advertising service are not live.
 
 This checklist is a go/no-go control. A checked box means evidence exists; it must not be checked merely because a task has been discussed.
@@ -17,11 +17,11 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Obtain jurisdiction-specific legal review and confirm the final service provider identity, business contact address, governing law, dispute process and tax treatment.
 
 ## B. Directory product — NOT COMPLETE
-- [x] Create Supabase storage for private business applications and approved public listings. [ ] Add public search, filters and pagination.
+- [x] Create Supabase storage for private business applications and approved public listings.\n- [x] Add public search across business/service text, category and city/country, category/location filters and 12-item pagination. [ ] Complete live browser/Android QA.
 - [x] Build the first business submission form with separate privacy and publication consent; Supabase is active and core role-based database workflow tests passed. [ ] Complete live browser/Android form testing; form remains closed.
-- [x] Add a database readiness RPC that checks the confirmed founder allowlist, required anonymous insert grants, private-field read restrictions and RLS policies before enabling the public form.
-- [ ] Build duplicate detection and business-claim ownership checks; current workflow uses an applicant authority declaration only.
-- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions; suspension/removal controls remain pending.
+- [x] Add a SECURITY INVOKER readiness RPC that checks public-schema tables, required anonymous insert grants, private-field read restrictions, RLS policies and rate-limit trigger. Founder authorization is checked separately by the founder RPC and review RPC.
+- [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; current authority checkbox is a declaration only.
+- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions. Founder can hide and republish approved listings. [ ] Add public correction/report/takedown workflow and expiry automation.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
 - [ ] Build a public report-a-listing / correction / removal request process.
 - [ ] Define category taxonomy, neutral default sort order and sponsored inventory limits.
@@ -40,9 +40,9 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Do not accept manual transfers or promise placements before the written order and delivery process are ready.
 
 ## D. Privacy, security and trust
-- [x] Founder-only admin login and business application/review interfaces are implemented; Supabase is active, founder is confirmed/allowlisted and core database workflow tests passed. [ ] Test actual dashboard sign-in and queue UI.
+- [x] Founder-only admin login and business application/review interfaces are implemented; Supabase is active, founder is confirmed/allowlisted and core database workflow tests passed. Dashboard now verifies the founder allowlist through RPC. [ ] Test actual dashboard sign-in and queue UI.
 - [x] No public customer account system, checkout or subscription management is implemented.
-- [x] General contact route is an email link; business application form is intentionally disabled pending live browser/Android acceptance testing. Visitors are warned not to send sensitive data.
+- [x] General contact route is an email link; business application form is intentionally disabled pending live browser/Android acceptance testing. Visitors are warned not to send sensitive data.\n- [ ] Enable Supabase leaked-password protection; current security advisor reports it disabled.
 - [ ] Decide what personal/business data will be collected when the directory launches and collect only what is necessary.
 - [ ] Set retention and deletion periods, access controls, backup protection and incident response.
 - [ ] Review hosting, email, analytics and payment processors as data processors/service providers.
