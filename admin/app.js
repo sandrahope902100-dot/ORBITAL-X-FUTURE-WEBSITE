@@ -144,6 +144,53 @@ async function review(id,decision,button){
   button.disabled=false;
  }
 }
+
+let paymentSettings={jamaica_instructions:"",international_instructions:""};
+const planNames={standard:"Standard",premium:"Premium",featured:"Featured"};
+const money=(amount,currency)=>new Intl.NumberFormat(currency==="JMD"?"en-JM":"en-US",{style:"currency",currency,maximumFractionDigits:currency==="JMD"?0:2}).format(Number(amount||0));
+async function loadPaymentSettings(){
+ try{const {data,error}=await db.rpc("get_directory_payment_settings");if(error)throw error;paymentSettings=data||paymentSettings;$("jamaicaPaymentInstructions").value=paymentSettings.jamaica_instructions||"";$("internationalPaymentInstructions").value=paymentSettings.international_instructions||"";msg("paymentSettingsMessage","Payment instructions loaded. Save after making changes.");}
+ catch(error){console.error(error);msg("paymentSettingsMessage","Payment settings could not load. Check database setup.");}
+}
+async function savePaymentSettings(){
+ const j=$("jamaicaPaymentInstructions").value.trim(),i=$("internationalPaymentInstructions").value.trim();$("savePaymentSettings").disabled=true;
+ try{const {error}=await db.rpc("save_directory_payment_settings",{p_jamaica_instructions:j,p_international_instructions:i});if(error)throw error;paymentSettings={jamaica_instructions:j,international_instructions:i};msg("paymentSettingsMessage","Payment instructions saved securely.");}
+ catch(error){msg("paymentSettingsMessage","Could not save payment instructions: "+(error.message||"Please retry."));}
+ finally{$("savePaymentSettings").disabled=false;}
+}
+function paymentEmail(s){
+ const currency=s.billing_currency||"USD",instructions=currency==="JMD"?paymentSettings.jamaica_instructions:paymentSettings.international_instructions;
+ if(!instructions.trim()){msg("paymentSettingsMessage","Save the "+currency+" payment instructions before drafting emails.");return;}
+ const plan=planNames[s.subscription_plan]||"Standard",subject="ORBITAL X FUTURE — "+plan+" directory subscription payment";
+ const body="Hello "+s.contact_name+",\n\nYour business listing application for "+s.business_name+" has been approved. Your listing is not public yet. It will be published only after we independently verify receipt of your payment.\n\nPACKAGE: "+plan+"\nMONTHLY FEE: "+money(s.monthly_amount,currency)+" "+currency+"\nBILLING: Monthly\nAPPLICATION REFERENCE: "+s.id+"\n\nPAYMENT INSTRUCTIONS\n"+instructions+"\n\nPlease include your application reference with your payment and reply with the transaction reference. A receipt can help us identify the transaction, but it is not proof of cleared funds. Your subscription begins only when payment is confirmed and the listing is activated. Each paid period lasts one month.\n\nRegards,\nORBITAL X FUTURE";
+ window.location.href="mailto:"+encodeURIComponent(s.contact_email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+}
+async function markInstructionsSent(id,button){
+ if(!confirm("Have you actually sent the payment instructions email?"))return;button.disabled=true;
+ try{const {error}=await db.rpc("mark_directory_payment_instructions_sent",{p_submission_id:id});if(error)throw error;msg("paymentSettingsMessage","Payment instructions marked as sent.");await loadPaymentQueue();}
+ catch(error){msg("paymentSettingsMessage","Could not update status: "+(error.message||"Please retry."));}
+ finally{button.disabled=false;}
+}
+async function confirmPayment(id,button){
+ const input=document.querySelector('[data-payment-reference="'+id+'"]'),reference=input?.value.trim()||"";
+ if(!reference){msg("paymentSettingsMessage","Enter the transaction reference you independently verified.");input?.focus();return;}
+ if(!confirm("Have you verified that the full amount has cleared in your own payment account? Confirming will publish this listing and start its one-month subscription."))return;
+ button.disabled=true;
+ try{const {error}=await db.rpc("confirm_directory_payment",{p_submission_id:id,p_payment_reference:reference,p_paid_at:new Date().toISOString()});if(error)throw error;msg("paymentSettingsMessage","Payment confirmed and listing activated.");await Promise.all([loadPaymentQueue(),approved()]);}
+ catch(error){msg("paymentSettingsMessage","Payment was not confirmed: "+(error.message||"Refresh and verify status."));}
+ finally{button.disabled=false;}
+}
+async function loadPaymentQueue(){
+ try{
+  const {data,error}=await db.from("business_submissions").select("id,business_name,contact_name,contact_email,country,city,subscription_plan,billing_currency,monthly_amount,payment_status,payment_reference").eq("status","approved_pending_payment").order("reviewed_at",{ascending:false});
+  if(error)throw error;
+  $("paymentQueue").innerHTML=data?.length?data.map(s=>'<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc((s.payment_status||"not_requested").replaceAll("_"," "))+'</span><h3>'+esc(s.business_name)+'</h3></div><small>'+esc(s.id.slice(0,8))+'</small></div><div class="application-details"><div class="application-detail"><span>Applicant</span><p>'+esc(s.contact_name)+' · '+esc(s.contact_email)+'</p></div><div class="application-detail"><span>Location</span><p>'+esc(s.city)+', '+esc(s.country)+'</p></div><div class="application-detail"><span>Subscription</span><p>'+esc(planNames[s.subscription_plan]||"Standard")+' · '+esc(money(s.monthly_amount,s.billing_currency))+' / month</p></div><div class="application-detail"><span>Payment reference</span><p>'+esc(s.payment_reference||"Not recorded")+'</p></div></div><div class="review-actions"><button type="button" class="secondary" data-draft-payment="'+esc(s.id)+'">Draft payment email</button><button type="button" class="secondary" data-mark-instructions="'+esc(s.id)+'">Mark instructions sent</button></div><label>Verified bank / transaction reference<input data-payment-reference="'+esc(s.id)+'" maxlength="160" placeholder="Enter reference after funds clear"></label><div class="review-actions"><button type="button" data-confirm-payment="'+esc(s.id)+'">Confirm payment & publish</button></div></article>').join(""):'<p class="muted">No approved applications are awaiting payment.</p>';
+  $("paymentQueue").querySelectorAll("[data-draft-payment]").forEach(b=>b.addEventListener("click",()=>{const s=data.find(x=>x.id===b.dataset.draftPayment);if(s)paymentEmail(s);}));
+  $("paymentQueue").querySelectorAll("[data-mark-instructions]").forEach(b=>b.addEventListener("click",()=>markInstructionsSent(b.dataset.markInstructions,b)));
+  $("paymentQueue").querySelectorAll("[data-confirm-payment]").forEach(b=>b.addEventListener("click",()=>confirmPayment(b.dataset.confirmPayment,b)));
+ }catch(error){console.error(error);$("paymentQueue").textContent="Payment queue unavailable. Check database setup and founder permissions.";}
+}
+
 async function init(){
  if(!window.supabase?.createClient){msg("loginMessage","Secure sign-in library did not load.");return;}
  try{
@@ -154,7 +201,7 @@ async function init(){
   const session=data?.session;
   if(session&&!(await verifyFounder(session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   show(Boolean(session));
-  if(session)await Promise.all([notes(),loadApps(),loadReports()]);
+  if(session)await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
  }catch(error){
   console.error("Founder dashboard initialization failed:",error);
   msg("loginMessage","Secure sign-in could not connect. Check your connection and try again.");
@@ -171,7 +218,7 @@ $("loginForm").addEventListener("submit",async e=>{
   if(!(await verifyFounder(data.session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   msg("loginMessage","");
   show(true);
-  await Promise.all([notes(),loadApps(),loadReports()]);
+  await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
  }catch(error){
   console.error("Founder sign-in failed:",error);
   msg("loginMessage","Sign-in could not be completed because of a connection problem. Try again.");
@@ -196,4 +243,4 @@ $("noteForm").addEventListener("submit",async e=>{
   $("saveNoteButton").disabled=false;
  }
 });
-$("refreshApplications").addEventListener("click",loadApps);$("refreshReports").addEventListener("click",loadReports);init();
+$("refreshApplications").addEventListener("click",loadApps);$("refreshReports").addEventListener("click",loadReports);$("refreshPayments").addEventListener("click",loadPaymentQueue);$("savePaymentSettings").addEventListener("click",savePaymentSettings);init();
