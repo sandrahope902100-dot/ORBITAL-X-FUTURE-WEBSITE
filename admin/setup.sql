@@ -314,7 +314,7 @@ create policy "Founder can read all business listings"
 on public.business_listings for select to authenticated
 using(public.is_orbital_founder());
 
--- Founder-only listing moderation; only the publication flag is writable.
+-- Founder-only listing moderation and renewal; only publication and expiry fields are writable.
 grant update (is_published, expires_at) on public.business_listings to authenticated;
 drop policy if exists "Founder can manage listing publication" on public.business_listings;
 create policy "Founder can manage listing publication"
@@ -346,11 +346,11 @@ as $directory$
     and b.expires_at > now()
     and (
       nullif(pg_catalog.btrim(p_search),'') is null
-      or b.business_name ilike '%' || pg_catalog.btrim(p_search) || '%'
-      or b.description ilike '%' || pg_catalog.btrim(p_search) || '%'
-      or b.category ilike '%' || pg_catalog.btrim(p_search) || '%'
-      or b.city ilike '%' || pg_catalog.btrim(p_search) || '%'
-      or b.country ilike '%' || pg_catalog.btrim(p_search) || '%'
+      or b.business_name ilike '%' || pg_catalog.left(pg_catalog.btrim(p_search),100) || '%'
+      or b.description ilike '%' || pg_catalog.left(pg_catalog.btrim(p_search),100) || '%'
+      or b.category ilike '%' || pg_catalog.left(pg_catalog.btrim(p_search),100) || '%'
+      or b.city ilike '%' || pg_catalog.left(pg_catalog.btrim(p_search),100) || '%'
+      or b.country ilike '%' || pg_catalog.left(pg_catalog.btrim(p_search),100) || '%'
     )
     and (
       nullif(pg_catalog.btrim(p_category),'') is null
@@ -358,10 +358,10 @@ as $directory$
     )
     and (
       nullif(pg_catalog.btrim(p_location),'') is null
-      or b.city ilike '%' || pg_catalog.btrim(p_location) || '%'
-      or b.country ilike '%' || pg_catalog.btrim(p_location) || '%'
+      or b.city ilike '%' || pg_catalog.left(pg_catalog.btrim(p_location),100) || '%'
+      or b.country ilike '%' || pg_catalog.left(pg_catalog.btrim(p_location),100) || '%'
     )
-  order by b.business_name asc
+  order by b.business_name asc, b.id asc
   limit greatest(1,least(coalesce(p_limit,12),50))
   offset least(greatest(coalesce(p_offset,0),0),50000);
 $directory$;
