@@ -634,8 +634,10 @@ returns trigger language plpgsql security definer set search_path=''
 as $$
 declare recent_count integer;
 begin
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(pg_catalog.lower(new.contact_email),0));
  select count(*) into recent_count from public.directory_reports r
- where lower(r.contact_email)=lower(new.contact_email) and r.created_at>now()-interval '24 hours';
+ where pg_catalog.lower(r.contact_email)=pg_catalog.lower(new.contact_email)
+   and r.created_at>now()-interval '24 hours';
  if recent_count>=5 then raise exception 'Report limit reached. Please try again later.'; end if;
  return new;
 end;
