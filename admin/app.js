@@ -126,7 +126,7 @@ async function loadApps(){
 async function review(id,decision,button){
  const reviewNote=$("review-"+id).value.trim();
  if(["request_changes","reject"].includes(decision)&&!reviewNote){const warning=decision==="reject"?"A rejection reason is required. Enter it in the Private review note box, then tap Reject again.":"A review note is required. Enter the requested changes, then tap Request changes again.";msg("applicationMessage",warning);const field=$("review-"+id);field.focus();field.scrollIntoView({behavior:"smooth",block:"center"});window.alert(warning);return;}
- if(decision==="approve"&&!confirm("Approve this business and publish its profile?"))return;
+ if(decision==="approve"&&!confirm("Approve this business application? It will remain unpublished until you verify payment."))return;
  if(decision==="reject"&&!confirm("Reject this application?"))return;
  button.disabled=true;
  msg("applicationMessage","Saving decision…");
