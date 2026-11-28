@@ -15,7 +15,7 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 let db=null,offset=0,loading=false;
 function say(message){if(status)status.textContent=message;}
 function card(b){
- const reportUrl="mailto:orbitalxfuture@gmail.com?subject="+encodeURIComponent("Directory listing correction or report: "+b.business_name)+"&body="+encodeURIComponent("Please review this directory listing.\\n\\nBusiness: "+b.business_name+"\\nLocation: "+b.city+", "+b.country+"\\nReason for report or correction request:\\n");
+ const reportUrl="mailto:orbitalxfuture@gmail.com?subject="+encodeURIComponent("Directory listing correction or report: "+b.business_name)+"&body="+encodeURIComponent("Please review this directory listing.\n\nBusiness: "+b.business_name+"\nLocation: "+b.city+", "+b.country+"\nReason for report or correction request:\n");
  const links=(b.website_url?'<a href="'+esc(b.website_url)+'" target="_blank" rel="noopener noreferrer">Website ↗</a> ':"")+
  (b.public_email?'<a href="mailto:'+esc(b.public_email)+'">Email</a> ':"")+
  (b.public_phone?'<a href="tel:'+esc(b.public_phone)+'">Call</a> ':"")+
