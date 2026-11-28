@@ -10,7 +10,7 @@ const categoryInput=document.getElementById("directoryCategory");
 const locationInput=document.getElementById("directoryLocation");
 const moreButton=document.getElementById("directoryLoadMore");
 const PAGE_SIZE=12;
-const APPLICATIONS_OPEN=false;
+const APPLICATIONS_OPEN=true;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 let db=null,offset=0,loading=false;
 function createPublicClient(){
@@ -82,19 +82,19 @@ async function loadListings(reset=false){
 async function start(){
  try{
   db=createPublicClient();
-  // Public search remains available even while application intake is closed.
+  // Public search and applications are open; founder review and payment verification remain required.
   await loadListings(true);
   const {data,error}=await db.rpc("directory_portal_ready");
   if(error||data!==true){
    button.disabled=true;
    button.textContent="Applications temporarily closed";
-   say("Applications are closed during pre-launch testing. Approved listings remain searchable.");
+   say("Applications are temporarily unavailable. Please try again shortly.");
    return;
   }
   if(!APPLICATIONS_OPEN){
    button.disabled=true;
    button.textContent="Applications temporarily closed";
-   say("The directory is in pre-launch testing. Applications are temporarily closed.");
+   say("Applications are open. All submissions are reviewed before publication.");
    return;
   }
   button.disabled=false;
