@@ -49,7 +49,8 @@ async function prepareFounderAccess(session){
   $("mfaVerifyForm").hidden=false;
   $("mfaVerifyButton").textContent="Verify and enter Founder Dashboard";
   $("mfaMessage").textContent="Two-factor authentication is enabled. Enter the current code from your authenticator app.";
-  await issueMfaChallenge();
+  try{await issueMfaChallenge();}
+  catch(error){console.error("Founder MFA challenge failed:",error);msg("mfaMessage","Could not start the authenticator challenge. Refresh and sign in again.");}
  }else{
   mfaMode="setup";mfaFactorId=null;mfaChallengeId=null;
   $("mfaSetup").hidden=false;
@@ -150,23 +151,6 @@ async function setPublication(id,publish,button){
  }catch(error){
   console.error("Listing moderation failed:",error);
   msg("applicationMessage","The listing status could not be changed. Refresh and verify before retrying.");
- }finally{
-  button.disabled=false;
- }
-}
-async function renewListing(id,button){
- if(!confirm("Only renew after the business reconfirms its details and asks to remain listed. Extend this Standard Listing for another 12 months?"))return;
- button.disabled=true;
- msg("applicationMessage","Renewing listing…");
- try{
-  const expiresAt=new Date(Date.now()+365*24*60*60*1000).toISOString();
-  const {error}=await db.from("business_listings").update({expires_at:expiresAt}).eq("id",id);
-  if(error){msg("applicationMessage","The listing could not be renewed. Check founder permissions and try again.");return;}
-  msg("applicationMessage","Listing renewed for 12 months.");
-  await approved();
- }catch(error){
-  console.error("Listing renewal failed:",error);
-  msg("applicationMessage","Renewal could not be completed. Refresh and verify before retrying.");
  }finally{
   button.disabled=false;
  }
