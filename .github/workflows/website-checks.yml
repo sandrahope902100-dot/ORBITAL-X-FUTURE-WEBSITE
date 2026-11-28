@@ -1,0 +1,75 @@
+name: Website release checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check assets/script.js
+          node --check assets/directory.js
+          node --check admin/app.js
+
+      - name: Check required directory controls and launch gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          html = Path("index.html").read_text()
+          directory = Path("assets/directory.js").read_text()
+          admin = Path("admin/app.js").read_text()
+
+          required_html = [
+              'id="directoryFilterForm"',
+              'id="directorySearch"',
+              'id="directoryCategory"',
+              'id="directoryLocation"',
+              'id="directoryLoadMore"',
+              'id="businessApplicationForm"',
+              'id="publicListings"',
+          ]
+          missing = [item for item in required_html if item not in html]
+          if missing:
+              raise SystemExit(f"Missing required website controls: {missing}")
+
+          required_directory = [
+              'const APPLICATIONS_OPEN=false',
+              'directory_portal_ready',
+              'search_business_directory',
+          ]
+          missing = [item for item in required_directory if item not in directory]
+          if missing:
+              raise SystemExit(f"Missing required directory safeguards: {missing}")
+
+          required_admin = [
+              'verifyFounder',
+              'review_business_submission',
+              'setPublication',
+              'renewListing',
+          ]
+          missing = [item for item in required_admin if item not in admin]
+          if missing:
+              raise SystemExit(f"Missing required founder controls: {missing}")
+
+          print("Required website controls and closed launch gate verified.")
+          PY
+
+      - name: Check browser code for server credentials
+        run: |
+          if grep -R -E 'sb_secret_|service_role|sk_live_|AIza[0-9A-Za-z_-]{20,}' assets admin --include='*.js' --include='*.html'; then
+            echo "Potential server credential found in browser code."
+            exit 1
+          fi
+          echo "No known server credential patterns found in browser code."
