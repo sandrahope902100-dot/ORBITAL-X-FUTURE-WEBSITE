@@ -32,7 +32,7 @@ Sasha AI is a supervised demonstration prototype. It is not approved for paid or
 
 ## Pre-launch terms and customer protections (27 November 2026)
 - Public page: `policies.html` (linked from the homepage).
-- Proposed Standard Listing term: 12 months, renewable annually at no charge after business details are reconfirmed and the listing remains eligible.
+- Standard Listing term: 12 months. Public visibility automatically ends at expiry unless the founder renews it after the business reconfirms its details. Renewal remains free and subject to review.
 - No automatic conversion from a free listing to a paid plan.
 - Proposed paid plans are month-to-month, with no minimum commitment; final cancellation, refund, tax, billing and delivery terms must be supplied in a written order before payment is enabled.
 - Business Plus is described as profile enhancement, not a ranking boost.
