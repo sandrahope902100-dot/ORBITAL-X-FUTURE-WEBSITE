@@ -51,7 +51,7 @@ async function setPublication(id,publish,button){
  }
 }
 async function renewListing(id,button){
- if(!confirm("Renew this Standard Listing for another 12 months?"))return;
+ if(!confirm("Only renew after the business reconfirms its details and asks to remain listed. Extend this Standard Listing for another 12 months?"))return;
  button.disabled=true;
  msg("applicationMessage","Renewing listing…");
  try{
