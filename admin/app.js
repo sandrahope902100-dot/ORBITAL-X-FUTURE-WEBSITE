@@ -21,14 +21,16 @@ async function notes(){
 }
 async function approved(){
  try{
-  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at,expires_at").order("published_at",{ascending:false});
+  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at,expires_at,subscription_plan,billing_currency,monthly_amount,renewal_payment_status").order("published_at",{ascending:false});
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
   $("approvedListings").innerHTML=data?.length?data.map(x=>{
    const expired=new Date(x.expires_at).getTime()<=Date.now();
-   return '<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>Published '+esc(new Date(x.published_at).toLocaleDateString())+' · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button></div></article>';
+   return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><h3>'+esc(x.business_name)+'</h3></div><small>'+esc((x.renewal_payment_status||"not_due").replaceAll("_"," "))+'</small></div><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><p>'+esc(String(x.subscription_plan||"standard").toUpperCase())+' · '+esc(money(x.monthly_amount,x.billing_currency))+' / month · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</p><div class="review-actions"><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button><button class="secondary" type="button" data-draft-renewal="'+esc(x.id)+'">Draft renewal email</button><button class="secondary" type="button" data-mark-renewal="'+esc(x.id)+'">Mark renewal instructions sent</button></div><label>Verified renewal transaction reference<input data-renewal-reference="'+esc(x.id)+'" maxlength="160" placeholder="Enter reference after funds clear"></label><div class="review-actions"><button type="button" data-confirm-renewal="'+esc(x.id)+'">Confirm renewal payment</button></div></article>';
   }).join(""):'<p class="muted">No approved listings yet.</p>';
   $("approvedListings").querySelectorAll("[data-publish-id]").forEach(b=>b.addEventListener("click",()=>setPublication(b.dataset.publishId,b.dataset.publishNext==="true",b)));
-  $("approvedListings").querySelectorAll("[data-renew-id]").forEach(b=>b.addEventListener("click",()=>renewListing(b.dataset.renewId,b)));
+  $("approvedListings").querySelectorAll("[data-draft-renewal]").forEach(b=>b.addEventListener("click",()=>{const x=data.find(v=>v.id===b.dataset.draftRenewal);if(x)renewalEmail(x);}));
+  $("approvedListings").querySelectorAll("[data-mark-renewal]").forEach(b=>b.addEventListener("click",()=>markRenewalInstructionsSent(b.dataset.markRenewal,b)));
+  $("approvedListings").querySelectorAll("[data-confirm-renewal]").forEach(b=>b.addEventListener("click",()=>confirmRenewalPayment(b.dataset.confirmRenewal,b)));
  }catch(error){
   console.error("Approved listings could not load:",error);
   $("approvedListings").textContent="Approved listings could not be loaded right now.";
@@ -189,6 +191,29 @@ async function loadPaymentQueue(){
   $("paymentQueue").querySelectorAll("[data-mark-instructions]").forEach(b=>b.addEventListener("click",()=>markInstructionsSent(b.dataset.markInstructions,b)));
   $("paymentQueue").querySelectorAll("[data-confirm-payment]").forEach(b=>b.addEventListener("click",()=>confirmPayment(b.dataset.confirmPayment,b)));
  }catch(error){console.error(error);$("paymentQueue").textContent="Payment queue unavailable. Check database setup and founder permissions.";}
+}
+
+
+function renewalEmail(x){
+ const currency=x.billing_currency||"USD",instructions=currency==="JMD"?paymentSettings.jamaica_instructions:paymentSettings.international_instructions;
+ if(!instructions.trim()){msg("paymentSettingsMessage","Save the "+currency+" payment instructions before drafting renewal emails.");return;}
+ const subject="ORBITAL X FUTURE — Monthly directory renewal";
+ const body="Hello,\n\nYour ORBITAL X FUTURE directory subscription for "+x.business_name+" is approaching its renewal date.\n\nPackage: "+(planNames[x.subscription_plan]||"Standard")+"\nMonthly renewal: "+money(x.monthly_amount,currency)+" "+currency+"\nCurrent expiry: "+new Date(x.expires_at).toLocaleDateString()+"\nListing reference: "+x.id+"\n\nPAYMENT INSTRUCTIONS\n"+instructions+"\n\nPlease include your listing reference with the payment and reply with the transaction reference. Your listing remains active only while the paid subscription period is current. We will extend it for one month after independently confirming cleared funds.\n\nRegards,\nORBITAL X FUTURE";
+ window.location.href="mailto:"+encodeURIComponent(x.public_email||"")+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+}
+async function markRenewalInstructionsSent(id,button){
+ if(!confirm("Have you sent the renewal payment instructions email?"))return;button.disabled=true;
+ try{const {error}=await db.rpc("mark_directory_renewal_instructions_sent",{p_listing_id:id});if(error)throw error;msg("paymentSettingsMessage","Renewal instructions marked as sent.");await approved();}
+ catch(error){msg("paymentSettingsMessage","Could not mark renewal instructions: "+(error.message||"Only send within 14 days of expiry."));}
+ finally{button.disabled=false;}
+}
+async function confirmRenewalPayment(id,button){
+ const input=document.querySelector('[data-renewal-reference="'+id+'"]'),reference=input?.value.trim()||"";
+ if(!reference){msg("paymentSettingsMessage","Enter the independently verified renewal payment reference.");input?.focus();return;}
+ if(!confirm("Have you verified that this renewal payment has cleared? Confirming will extend the listing for one month."))return;button.disabled=true;
+ try{const {error}=await db.rpc("confirm_directory_renewal_payment",{p_listing_id:id,p_payment_reference:reference,p_paid_at:new Date().toISOString()});if(error)throw error;msg("paymentSettingsMessage","Renewal payment confirmed. The listing has been extended by one month.");await approved();}
+ catch(error){msg("paymentSettingsMessage","Renewal was not confirmed: "+(error.message||"Refresh and verify."));}
+ finally{button.disabled=false;}
 }
 
 async function init(){
