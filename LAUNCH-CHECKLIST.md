@@ -21,9 +21,9 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [x] Build the first business submission form with separate privacy and publication consent; Supabase is active and core role-based database workflow tests passed. [ ] Complete live browser/Android form testing; form remains closed.
 - [x] Add a SECURITY INVOKER readiness RPC that checks public-schema tables, required anonymous insert grants, private-field read restrictions, RLS policies and rate-limit trigger. Founder authorization is checked separately by the founder RPC and review RPC.
 - [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; current authority checkbox is a declaration only.
-- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions. Founder can hide and republish approved listings. [ ] Add public correction/report/takedown workflow and expiry automation.
+- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions. Founder can hide and republish approved listings. [x] Add a public email route for listing correction/report requests and database-enforced 12-month public expiry with founder renewal controls. [ ] Add a tracked takedown/case workflow and automated expiry notifications/archive.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
-- [ ] Build a public report-a-listing / correction / removal request process.
+- [x] Add a prefilled public email route to report/correct a listing. [ ] Build a tracked report/takedown case workflow and response-time standard.
 - [ ] Define category taxonomy, neutral default sort order and sponsored inventory limits.
 - [ ] Add CAPTCHA/bot protection beyond the honeypot and email rate limit; test accessibility, mobile layout, security, backups and data export/deletion.
 - [ ] Add a clear business contact and support process before accepting submissions.
