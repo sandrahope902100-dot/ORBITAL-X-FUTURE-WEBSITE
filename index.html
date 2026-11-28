@@ -115,7 +115,14 @@
         <article class="directory-card"><span>05</span><h3>Retail &amp; Online Stores</h3><p>Independent shops, ecommerce brands, gifts and specialty products.</p></article>
         <article class="directory-card"><span>06</span><h3>Creative &amp; Digital</h3><p>Designers, photographers, marketers, developers and creators.</p></article>
       </div>
-      <div class="live-listings"><p class="eyebrow">APPROVED BUSINESS LISTINGS</p><div id="publicListings" class="directory-grid"><p class="directory-intro">Loading approved listings…</p></div></div><p class="directory-status"><span class="status-dot"></span> ONLY FOUNDER-APPROVED BUSINESS PROFILES ARE PUBLISHED</p>
+      <div class="live-listings"><p class="eyebrow">APPROVED BUSINESS LISTINGS</p><form id="directoryFilterForm" class="directory-controls" role="search">
+<label>Search businesses<input id="directorySearch" type="search" maxlength="100" placeholder="Business name, service or keyword"></label>
+<label>Category<select id="directoryCategory"><option value="">All categories</option><option>Home &amp; Construction</option><option>Beauty &amp; Wellness</option><option>Food &amp; Hospitality</option><option>Cleaning &amp; Property</option><option>Retail &amp; Online Stores</option><option>Creative &amp; Digital</option><option>Other</option></select></label>
+<label>City or country<input id="directoryLocation" type="search" maxlength="100" placeholder="e.g. Kingston or Jamaica"></label>
+<button type="submit">Search directory</button>
+</form>
+<div id="publicListings" class="directory-grid"><p class="directory-intro">Loading approved listings…</p></div>
+<button id="directoryLoadMore" class="directory-load-more" type="button" hidden>Load more businesses</button></div><p class="directory-status"><span class="status-dot"></span> ONLY FOUNDER-APPROVED BUSINESS PROFILES ARE PUBLISHED</p>
     </section>
 
     <section class="pricing-section section" id="pricing">
