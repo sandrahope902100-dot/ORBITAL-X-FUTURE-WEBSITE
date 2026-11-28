@@ -427,7 +427,7 @@ begin
     raise exception 'Founder authorization required.';
   end if;
 
-  if p_decision is null or p_decision not in ('approve', 'reject', 'request_changes') then
+  if p_decision is null or p_decision not in ('approve','reject','request_changes') then
     raise exception 'Invalid review decision.';
   end if;
 
@@ -435,75 +435,63 @@ begin
     raise exception 'Review note too long.';
   end if;
 
-  if p_decision = 'request_changes'
-     and nullif(pg_catalog.btrim(p_review_notes), '') is null then
-    raise exception 'A review note is required when requesting changes.';
+  if p_decision in ('request_changes','reject')
+     and nullif(pg_catalog.btrim(p_review_notes),'') is null then
+    raise exception 'A review note is required for this decision.';
   end if;
 
-  select * into s
-  from public.business_submissions
-  where id = p_submission_id
-  for update;
+  select * into s from public.business_submissions
+  where id=p_submission_id for update;
 
   if not found then
     raise exception 'Application not found.';
   end if;
 
-  if s.status not in ('pending', 'changes_requested') then
+  if s.status not in ('pending','changes_requested') then
     raise exception 'Application already decided.';
   end if;
 
-  if p_decision = 'approve' and not s.publication_consent then
+  if p_decision in ('approve','request_changes') and s.status <> 'pending' then
+    raise exception 'A changes-requested application cannot be approved or re-requested. The applicant must submit a new application.';
+  end if;
+
+  if p_decision='approve' and not s.publication_consent then
     raise exception 'Publication consent is required before approval.';
   end if;
 
-  if p_decision = 'approve' then
+  if p_decision='approve' then
     new_slug :=
-      pg_catalog.lower(
-        pg_catalog.regexp_replace(pg_catalog.btrim(s.business_name), '[^a-zA-Z0-9]+', '-', 'g')
-      )
-      || '-'
-      || pg_catalog.left(pg_catalog.replace(s.id::text, '-', ''), 6);
+      pg_catalog.lower(pg_catalog.regexp_replace(pg_catalog.btrim(s.business_name),'[^a-zA-Z0-9]+','-','g'))
+      || '-' || pg_catalog.left(pg_catalog.replace(s.id::text,'-',''),6);
 
     insert into public.business_listings (
-      submission_id, slug, business_name, category, country, city,
-      description, website_url, public_email, public_phone, is_published
-    )
-    values (
-      s.id, new_slug, s.business_name, s.category, s.country, s.city,
-      s.description, nullif(s.website_url, ''), nullif(s.public_email, ''),
-      nullif(s.public_phone, ''), true
+      submission_id,slug,business_name,category,country,city,
+      description,website_url,public_email,public_phone,is_published
+    ) values (
+      s.id,new_slug,s.business_name,s.category,s.country,s.city,
+      s.description,nullif(s.website_url,''),nullif(s.public_email,''),
+      nullif(s.public_phone,''),true
     );
 
     update public.business_submissions
-    set status = 'approved',
-        review_notes = nullif(p_review_notes, ''),
-        reviewed_at = now(),
-        reviewer_user_id = auth.uid()
-    where id = s.id;
+    set status='approved',review_notes=nullif(p_review_notes,''),
+        reviewed_at=now(),reviewer_user_id=auth.uid()
+    where id=s.id;
 
-  elsif p_decision = 'reject' then
+  elsif p_decision='reject' then
     update public.business_submissions
-    set status = 'rejected',
-        review_notes = nullif(p_review_notes, ''),
-        reviewed_at = now(),
-        reviewer_user_id = auth.uid()
-    where id = s.id;
+    set status='rejected',review_notes=nullif(p_review_notes,''),
+        reviewed_at=now(),reviewer_user_id=auth.uid()
+    where id=s.id;
 
   else
     update public.business_submissions
-    set status = 'changes_requested',
-        review_notes = nullif(p_review_notes, ''),
-        reviewed_at = now(),
-        reviewer_user_id = auth.uid()
-    where id = s.id;
+    set status='changes_requested',review_notes=nullif(p_review_notes,''),
+        reviewed_at=now(),reviewer_user_id=auth.uid()
+    where id=s.id;
   end if;
 
-  return pg_catalog.jsonb_build_object(
-    'success', true,
-    'decision', p_decision,
-    'submission_id', s.id
-  );
+  return pg_catalog.jsonb_build_object('success',true,'decision',p_decision,'submission_id',s.id);
 end;
 $review$;
 
