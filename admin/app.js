@@ -23,6 +23,11 @@ async function approved(){
  try{
   const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at,expires_at,subscription_plan,billing_currency,monthly_amount,renewal_payment_status").order("published_at",{ascending:false});
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
+  if(data?.length){
+   const {data:contacts}=await db.from("business_submissions").select("id,contact_email,contact_name").in("id",data.map(x=>x.submission_id));
+   const byId=new Map((contacts||[]).map(c=>[c.id,c]));
+   data.forEach(x=>{const c=byId.get(x.submission_id);x.contact_email=c?.contact_email||"";x.contact_name=c?.contact_name||"";});
+  }
   $("approvedListings").innerHTML=data?.length?data.map(x=>{
    const expired=new Date(x.expires_at).getTime()<=Date.now();
    return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><h3>'+esc(x.business_name)+'</h3></div><small>'+esc((x.renewal_payment_status||"not_due").replaceAll("_"," "))+'</small></div><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><p>'+esc(String(x.subscription_plan||"standard").toUpperCase())+' · '+esc(money(x.monthly_amount,x.billing_currency))+' / month · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</p><div class="review-actions"><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button><button class="secondary" type="button" data-draft-renewal="'+esc(x.id)+'">Draft renewal email</button><button class="secondary" type="button" data-mark-renewal="'+esc(x.id)+'">Mark renewal instructions sent</button></div><label>Verified renewal transaction reference<input data-renewal-reference="'+esc(x.id)+'" maxlength="160" placeholder="Enter reference after funds clear"></label><div class="review-actions"><button type="button" data-confirm-renewal="'+esc(x.id)+'">Confirm renewal payment</button></div></article>';
@@ -199,7 +204,7 @@ function renewalEmail(x){
  if(!instructions.trim()){msg("paymentSettingsMessage","Save the "+currency+" payment instructions before drafting renewal emails.");return;}
  const subject="ORBITAL X FUTURE — Monthly directory renewal";
  const body="Hello,\n\nYour ORBITAL X FUTURE directory subscription for "+x.business_name+" is approaching its renewal date.\n\nPackage: "+(planNames[x.subscription_plan]||"Standard")+"\nMonthly renewal: "+money(x.monthly_amount,currency)+" "+currency+"\nCurrent expiry: "+new Date(x.expires_at).toLocaleDateString()+"\nListing reference: "+x.id+"\n\nPAYMENT INSTRUCTIONS\n"+instructions+"\n\nPlease include your listing reference with the payment and reply with the transaction reference. Your listing remains active only while the paid subscription period is current. We will extend it for one month after independently confirming cleared funds.\n\nRegards,\nORBITAL X FUTURE";
- window.location.href="mailto:"+encodeURIComponent(x.public_email||"")+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+ if(!x.contact_email){msg("paymentSettingsMessage","No private billing contact email was found for this listing.");return;}\n window.location.href="mailto:"+encodeURIComponent(x.contact_email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
 }
 async function markRenewalInstructionsSent(id,button){
  if(!confirm("Have you sent the renewal payment instructions email?"))return;button.disabled=true;
