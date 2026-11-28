@@ -18,8 +18,8 @@ orbitalxfuture@gmail.com
 
 ## Current business status
 - ORBITAL X FUTURE is described publicly as an independent technology venture. Do not describe it as incorporated or registered.
-- The website is an informational pre-launch site. The directory application interface is present but remains disabled until the database is configured and verified.
-- The directory submission form, founder review dashboard, public approved-listing display, business/service search, category/location filters, pagination, duplicate protection and founder hide/republish controls are implemented. Supabase is active and the core role-based workflow has passed synthetic database tests (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
+- The website is an informational pre-launch site. The directory application interface is present but remains disabled pending live browser/Android testing and the remaining operational/security gates.
+- The directory submission form, founder review dashboard, public approved-listing display, business/service search, category/location filters, pagination, duplicate protection, founder hide/republish/renewal controls, public correction email links and automatic 12-month listing expiry are implemented. Supabase is active and the core role-based workflow has passed synthetic database tests (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
 - Pricing shown on the website is proposed introductory pricing only. It is not an active checkout offer.
 - No payments are currently accepted through the website.
 - Paid placements, listing management, billing, cancellation/refund terms and delivery processes must be finalized before taking payment.
@@ -30,7 +30,7 @@ orbitalxfuture@gmail.com
 Sasha AI is a supervised demonstration prototype. It is not approved for paid or unsupervised business deployment. See the Sasha AI repository's BUSINESS-READINESS.md for the current engineering assessment.
 
 
-## Pre-launch terms and customer protections (27 November 2026)
+## Pre-launch terms and customer protections (28 November 2026)
 - Public page: `policies.html` (linked from the homepage).
 - Standard Listing term: 12 months. Public visibility automatically ends at expiry unless the founder renews it after the business reconfirms its details. Renewal remains free and subject to review.
 - No automatic conversion from a free listing to a paid plan.
