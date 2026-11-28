@@ -82,6 +82,7 @@ async function loadReports(){
 }
 async function updateReport(id,status,button){
  const note=document.querySelector('[data-report-note="'+id+'"]').value.trim();
+ if(["resolved","dismissed"].includes(status)&&!note){msg("reportMessage","Add a private note explaining how this report was resolved or why it was dismissed.");return;}
  if(status==="resolved"&&!confirm("Mark this report as resolved? Ensure any required listing correction or removal is complete."))return;
  if(status==="dismissed"&&!confirm("Dismiss this report?"))return;
  button.disabled=true;msg("reportMessage","Saving report decision…");
