@@ -21,10 +21,14 @@ async function notes(){
 }
 async function approved(){
  try{
-  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at").order("published_at",{ascending:false});
+  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at,expires_at").order("published_at",{ascending:false});
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
-  $("approvedListings").innerHTML=data?.length?data.map(x=>'<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>'+esc(new Date(x.published_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button></div></article>').join(""):'<p class="muted">No approved listings yet.</p>';
+  $("approvedListings").innerHTML=data?.length?data.map(x=>{
+   const expired=new Date(x.expires_at).getTime()<=Date.now();
+   return '<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>Published '+esc(new Date(x.published_at).toLocaleDateString())+' · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button><button class="secondary" type="button" data-renew-id="'+esc(x.id)+'">Renew 12 months</button></div></article>';
+  }).join(""):'<p class="muted">No approved listings yet.</p>';
   $("approvedListings").querySelectorAll("[data-publish-id]").forEach(b=>b.addEventListener("click",()=>setPublication(b.dataset.publishId,b.dataset.publishNext==="true",b)));
+  $("approvedListings").querySelectorAll("[data-renew-id]").forEach(b=>b.addEventListener("click",()=>renewListing(b.dataset.renewId,b)));
  }catch(error){
   console.error("Approved listings could not load:",error);
   $("approvedListings").textContent="Approved listings could not be loaded right now.";
@@ -42,6 +46,23 @@ async function setPublication(id,publish,button){
  }catch(error){
   console.error("Listing moderation failed:",error);
   msg("applicationMessage","The listing status could not be changed. Refresh and verify before retrying.");
+ }finally{
+  button.disabled=false;
+ }
+}
+async function renewListing(id,button){
+ if(!confirm("Renew this Standard Listing for another 12 months?"))return;
+ button.disabled=true;
+ msg("applicationMessage","Renewing listing…");
+ try{
+  const expiresAt=new Date(Date.now()+365*24*60*60*1000).toISOString();
+  const {error}=await db.from("business_listings").update({expires_at:expiresAt}).eq("id",id);
+  if(error){msg("applicationMessage","The listing could not be renewed. Check founder permissions and try again.");return;}
+  msg("applicationMessage","Listing renewed for 12 months.");
+  await approved();
+ }catch(error){
+  console.error("Listing renewal failed:",error);
+  msg("applicationMessage","Renewal could not be completed. Refresh and verify before retrying.");
  }finally{
   button.disabled=false;
  }
