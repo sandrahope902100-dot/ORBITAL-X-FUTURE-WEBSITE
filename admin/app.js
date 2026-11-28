@@ -74,7 +74,10 @@ async function loadApps(){
   msg("applicationMessage","");
   $("applicationsList").innerHTML=data?.length?data.map(s=>{
    const fields=[["Category",s.category],["Location",s.city+", "+s.country],["Description",s.description],["Website",s.website_url],["Public email",s.public_email],["Public phone",s.public_phone],["Applicant",s.contact_name],["Private contact email",s.contact_email],["Submitted",new Date(s.submitted_at).toLocaleString()]];
-   return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc(s.status.replace("_"," "))+'</span><h3>'+esc(s.business_name)+'</h3></div><small>'+esc(s.id.slice(0,8))+'</small></div><div class="application-details">'+fields.filter(x=>x[1]).map(x=>'<div class="application-detail"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join("")+'</div><label>Private review note<textarea id="review-'+s.id+'" rows="2" maxlength="2000">'+esc(s.review_notes||"")+'</textarea></label><div class="review-actions"><button class="secondary" data-email="'+esc(s.contact_email)+'" data-business="'+esc(s.business_name)+'" data-id="'+s.id+'">Draft email to applicant</button><button data-action="approve" data-id="'+s.id+'">Approve & publish</button><button class="secondary" data-action="request_changes" data-id="'+s.id+'">Request changes</button><button class="danger" data-action="reject" data-id="'+s.id+'">Reject</button></div></article>';
+   const decisionButtons=s.status==="pending"
+    ? '<button data-action="approve" data-id="'+s.id+'">Approve & publish</button><button class="secondary" data-action="request_changes" data-id="'+s.id+'">Request changes</button>'
+    : '<p class="muted">Awaiting a new application from the business. This earlier application cannot be approved.</p>';
+   return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc(s.status.replace("_"," "))+'</span><h3>'+esc(s.business_name)+'</h3></div><small>'+esc(s.id.slice(0,8))+'</small></div><div class="application-details">'+fields.filter(x=>x[1]).map(x=>'<div class="application-detail"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join("")+'</div><label>Private review note<textarea id="review-'+s.id+'" rows="2" maxlength="2000">'+esc(s.review_notes||"")+'</textarea></label><div class="review-actions"><button class="secondary" data-email="'+esc(s.contact_email)+'" data-business="'+esc(s.business_name)+'" data-id="'+s.id+'">Draft email to applicant</button>'+decisionButtons+'<button class="danger" data-action="reject" data-id="'+s.id+'">Reject</button></div></article>';
   }).join(""):'<p class="muted">No applications waiting for review.</p>';
   $("applicationsList").querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>review(b.dataset.id,b.dataset.action,b)));
   $("applicationsList").querySelectorAll("[data-email]").forEach(b=>b.addEventListener("click",()=>{
@@ -92,7 +95,7 @@ async function loadApps(){
 }
 async function review(id,decision,button){
  const reviewNote=$("review-"+id).value.trim();
- if(decision==="request_changes"&&!reviewNote){msg("applicationMessage","Add a private review note explaining what the applicant must change before requesting changes.");return;}
+ if(["request_changes","reject"].includes(decision)&&!reviewNote){msg("applicationMessage","Add a private review note explaining the requested changes or rejection reason.");return;}
  if(decision==="approve"&&!confirm("Approve this business and publish its profile?"))return;
  if(decision==="reject"&&!confirm("Reject this application?"))return;
  button.disabled=true;
