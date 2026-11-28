@@ -25,7 +25,7 @@ async function approved(){
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
   $("approvedListings").innerHTML=data?.length?data.map(x=>{
    const expired=new Date(x.expires_at).getTime()<=Date.now();
-   return '<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>Published '+esc(new Date(x.published_at).toLocaleDateString())+' · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button><button class="secondary" type="button" data-renew-id="'+esc(x.id)+'">Renew 12 months</button></div></article>';
+   return '<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>Published '+esc(new Date(x.published_at).toLocaleDateString())+' · Expires '+esc(new Date(x.expires_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(expired?"Expired":x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button></div></article>';
   }).join(""):'<p class="muted">No approved listings yet.</p>';
   $("approvedListings").querySelectorAll("[data-publish-id]").forEach(b=>b.addEventListener("click",()=>setPublication(b.dataset.publishId,b.dataset.publishNext==="true",b)));
   $("approvedListings").querySelectorAll("[data-renew-id]").forEach(b=>b.addEventListener("click",()=>renewListing(b.dataset.renewId,b)));
@@ -98,13 +98,13 @@ async function updateReport(id,status,button){
 }
 async function loadApps(){
  try{
-  const {data,error}=await db.from("business_submissions").select("id,business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,status,review_notes,submitted_at").in("status",["pending","changes_requested"]).order("submitted_at");
+  const {data,error}=await db.from("business_submissions").select("id,business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,status,review_notes,submitted_at,subscription_plan,billing_currency,monthly_amount").in("status",["pending","changes_requested"]).order("submitted_at");
   if(error){$("applicationsList").textContent="Cannot load applications. Check that the SQL setup completed and this is the verified founder account.";msg("applicationMessage",error.message);return;}
   msg("applicationMessage","");
   $("applicationsList").innerHTML=data?.length?data.map(s=>{
-   const fields=[["Category",s.category],["Location",s.city+", "+s.country],["Description",s.description],["Website",s.website_url],["Public email",s.public_email],["Public phone",s.public_phone],["Applicant",s.contact_name],["Private contact email",s.contact_email],["Submitted",new Date(s.submitted_at).toLocaleString()]];
+   const fields=[["Category",s.category],["Location",s.city+", "+s.country],["Subscription",String(s.subscription_plan||"standard").toUpperCase()+" · "+s.billing_currency+" "+Number(s.monthly_amount).toFixed(s.billing_currency==="JMD"?0:2)+" / month"],["Description",s.description],["Website",s.website_url],["Public email",s.public_email],["Public phone",s.public_phone],["Applicant",s.contact_name],["Private contact email",s.contact_email],["Submitted",new Date(s.submitted_at).toLocaleString()]];
    const decisionButtons=s.status==="pending"
-    ? '<button data-action="approve" data-id="'+s.id+'">Approve & publish</button><button class="secondary" data-action="request_changes" data-id="'+s.id+'">Request changes</button>'
+    ? '<button data-action="approve" data-id="'+s.id+'">Approve (payment required)</button><button class="secondary" data-action="request_changes" data-id="'+s.id+'">Request changes</button>'
     : '<p class="muted">Awaiting a new application from the business. This earlier application cannot be approved.</p>';
    return '<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc(s.status.replace("_"," "))+'</span><h3>'+esc(s.business_name)+'</h3></div><small>'+esc(s.id.slice(0,8))+'</small></div><div class="application-details">'+fields.filter(x=>x[1]).map(x=>'<div class="application-detail"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join("")+'</div><label>Private review note<textarea id="review-'+s.id+'" rows="2" maxlength="2000">'+esc(s.review_notes||"")+'</textarea></label><div class="review-actions"><button class="secondary" data-email="'+esc(s.contact_email)+'" data-business="'+esc(s.business_name)+'" data-id="'+s.id+'">Draft email to applicant</button>'+decisionButtons+'<button class="danger" data-action="reject" data-id="'+s.id+'">Reject</button></div></article>';
   }).join(""):'<p class="muted">No applications waiting for review.</p>';
@@ -116,6 +116,7 @@ async function loadApps(){
    window.location.href="mailto:"+encodeURIComponent(b.dataset.email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
   }));
   await approved();
+  await loadPaymentQueue();
  }catch(error){
   console.error("Business applications could not load:",error);
   $("applicationsList").textContent="Applications could not be loaded because of a connection problem. Try Refresh.";
