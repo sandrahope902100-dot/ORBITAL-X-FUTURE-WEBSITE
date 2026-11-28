@@ -646,3 +646,30 @@ revoke all on function public.limit_directory_reports() from public,anon,authent
 drop trigger if exists directory_report_rate_limit on public.directory_reports;
 create trigger directory_report_rate_limit before insert on public.directory_reports
 for each row execute function public.limit_directory_reports();
+
+alter table public.directory_reports
+drop constraint if exists directory_reports_contact_email_format_check;
+alter table public.directory_reports
+add constraint directory_reports_contact_email_format_check
+check (contact_email ~* '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$');
+
+create or replace function public.validate_directory_report()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare canonical_name text;
+begin
+ if new.listing_id is null then raise exception 'A valid published listing is required.'; end if;
+ select b.business_name into canonical_name from public.business_listings b
+ where b.id=new.listing_id and b.is_published=true and b.expires_at>now();
+ if canonical_name is null then raise exception 'This listing is no longer available for reporting.'; end if;
+ new.listing_name:=canonical_name;
+ new.status:='open';
+ new.founder_notes:=null;
+ new.resolved_at:=null;
+ return new;
+end;
+$$;
+revoke all on function public.validate_directory_report() from public,anon,authenticated;
+drop trigger if exists validate_directory_report_before_insert on public.directory_reports;
+create trigger validate_directory_report_before_insert before insert on public.directory_reports
+for each row execute function public.validate_directory_report();
