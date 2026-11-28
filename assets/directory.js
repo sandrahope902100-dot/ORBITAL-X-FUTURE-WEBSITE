@@ -151,7 +151,8 @@ form?.addEventListener("submit",async e=>{
   contact_email:String(f.get("contact_email")||"").trim().toLowerCase(),
   authority_confirmed:f.get("authority_confirmed")==="on",
   privacy_consent:f.get("privacy_consent")==="on",
-  publication_consent:f.get("publication_consent")==="on"
+  publication_consent:f.get("publication_consent")==="on",
+  subscription_terms_consent:f.get("subscription_terms_consent")==="on"
  };
  try{
   const {error}=await db.from("business_submissions").insert(row);
