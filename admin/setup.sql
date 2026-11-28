@@ -437,20 +437,12 @@ create or replace function public.directory_portal_ready()
 returns boolean
 language sql
 stable
-security definer
+security invoker
 set search_path = ''
 as $ready$
   select
     pg_catalog.to_regclass('public.business_submissions') is not null
     and pg_catalog.to_regclass('public.business_listings') is not null
-    and exists (
-      select 1
-      from private.founder_admins f
-      join auth.users u on u.id = f.user_id
-      where lower(u.email) = 'orbitalxfuture@gmail.com'
-        and u.email_confirmed_at is not null
-    )
-
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'business_name', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'category', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'country', 'INSERT')
@@ -464,7 +456,6 @@ as $ready$
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'authority_confirmed', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'privacy_consent', 'INSERT')
     and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'publication_consent', 'INSERT')
-
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'id', 'INSERT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'INSERT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'review_notes', 'INSERT')
@@ -474,7 +465,6 @@ as $ready$
     and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'UPDATE')
     and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'DELETE')
     and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'TRUNCATE')
-
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_name', 'SELECT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_email', 'SELECT')
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'SELECT')
@@ -484,66 +474,38 @@ as $ready$
     and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'submitted_at', 'SELECT')
     and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'SELECT')
     and pg_catalog.has_table_privilege('anon', 'public.business_listings', 'SELECT')
-
     and exists (
-      select 1
-      from pg_catalog.pg_class c
-      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-      where n.nspname = 'public'
-        and c.relname = 'business_submissions'
-        and c.relrowsecurity
+      select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname='business_submissions' and c.relrowsecurity
     )
-
     and exists (
-      select 1
-      from pg_catalog.pg_class c
-      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-      where n.nspname = 'public'
-        and c.relname = 'business_listings'
-        and c.relrowsecurity
+      select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname='business_listings' and c.relrowsecurity
     )
-
     and exists (
       select 1 from pg_catalog.pg_policies
-      where schemaname = 'public'
-        and tablename = 'business_submissions'
-        and policyname = 'Public can submit pending business applications'
-        and cmd = 'INSERT'
+      where schemaname='public' and tablename='business_submissions'
+        and policyname='Public can submit pending business applications' and cmd='INSERT'
     )
-
     and exists (
       select 1 from pg_catalog.pg_policies
-      where schemaname = 'public'
-        and tablename = 'business_listings'
-        and policyname = 'Anyone can read published business listings'
-        and cmd = 'SELECT'
+      where schemaname='public' and tablename='business_listings'
+        and policyname='Anyone can read published business listings' and cmd='SELECT'
     )
-
     and exists (
-      select 1
-      from pg_catalog.pg_trigger t
-      join pg_catalog.pg_class c on c.oid = t.tgrelid
-      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-      where n.nspname = 'public'
-        and c.relname = 'business_submissions'
-        and t.tgname = 'business_submission_rate_limit'
-        and not t.tgisinternal
+      select 1 from pg_catalog.pg_trigger t
+      join pg_catalog.pg_class c on c.oid=t.tgrelid
+      join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname='business_submissions'
+        and t.tgname='business_submission_rate_limit' and not t.tgisinternal
     )
-
-    and pg_catalog.has_function_privilege('authenticated', 'public.review_business_submission(uuid,text,text)', 'EXECUTE')
-    and pg_catalog.has_function_privilege('authenticated', 'public.is_orbital_founder()', 'EXECUTE')
-
+    and pg_catalog.has_function_privilege('authenticated','public.review_business_submission(uuid,text,text)','EXECUTE')
+    and pg_catalog.has_function_privilege('authenticated','public.is_orbital_founder()','EXECUTE')
     and exists (
-      select 1
-      from pg_catalog.pg_class c
-      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-      where n.nspname = 'public'
-        and c.relname = 'founder_notes'
-        and c.relrowsecurity
+      select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public' and c.relname='founder_notes' and c.relrowsecurity
     );
 $ready$;
 
-revoke all on function public.directory_portal_ready()
-from public, anon, authenticated;
-
-grant execute on function public.directory_portal_ready() to anon;
+revoke all on function public.directory_portal_ready() from public, anon, authenticated;
+grant execute on function public.directory_portal_ready() to anon, authenticated;
