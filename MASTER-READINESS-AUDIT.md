@@ -1,6 +1,6 @@
 # ORBITAL X FUTURE — Master Construction & Readiness Audit
 
-**Audit date:** 27 November 2026  
+**Audit date:** 28 November 2026  
 **Scope:** ORBITAL X FUTURE public website, directory submission/review workflow, Supabase setup code, founder/admin area, pricing and customer operations, Sasha AI application, deployment configuration, privacy and launch controls.  
 **Decision:** **Pre-launch only. Not ready to accept directory applications, take payments, or sell Sasha AI as a business service.** Sasha AI may be shown only as a supervised demonstration with its prototype/privacy notice.
 
@@ -21,8 +21,8 @@ This document separates source-code review from live acceptance testing. A file 
 | Founder profile and Google visibility | Founder details, JSON-LD, `robots.txt`, `sitemap.xml` and a Google site-verification meta token are present. No favicon or social-share image was found. | **Partially complete** — Search Console ownership verification, indexing and search appearance are not independently confirmed. |
 | Directory application form | Public form is coded with separate privacy and publication consent. Supabase readiness returns true, but a code-level launch gate keeps applications closed until live browser/Android QA is complete. | **Database active; synthetic DB workflow tests passed; public UI test pending.** |
 | Founder admin and review | Founder sign-in, private application queue, private notes, approve/publish, request changes and reject are coded. Founder Auth email is confirmed and allowlisted; RLS and RPC roles were tested in Supabase. | **Database permissions/workflow verified; actual dashboard sign-in and queue UI test pending.** |
-| Directory public listings | Approved-profile display reads published rows and escapes displayed text. | **First version only** — not a searchable/filterable directory; no pagination beyond the first 60 entries. |
-| Directory moderation and verification | Manual founder review exists. | **Not complete** — no duplicate detection, independent business verification, applicant email verification, correction portal, report/takedown workflow, suspension/removal controls or listing expiry automation. |
+| Directory public listings | Approved-profile display reads only published rows and escapes displayed text. Search across business/service text, category and city/country filters, plus 12-item pagination are implemented through an invoker-rights RPC. | **Code and database deployed; live browser/Android QA pending.** |
+| Directory moderation and verification | Founder review, active duplicate protection by normalized contact email/business name, and hide/republish controls are implemented. | **Partially complete** — no independent business verification, applicant email verification, edit/correction portal, public report/takedown workflow or listing expiry automation. |
 | Pricing and sales | Proposed free and paid tiers are displayed with pre-launch disclosures. | **Proposal only** — no active offer, order/contract workflow, checkout, invoices, subscription handling, cancellation/refund processing or payment acceptance. |
 | Privacy and security | Directory SQL is active with RLS, column-level anonymous insert permissions, a founder allowlist and an application rate limit. Sasha has server-side API keys, bounded request sizes, in-memory IP throttles and an in-app provider disclosure. | **Partially complete** — fixed retention period, deletion operations, incident response, CAPTCHA, provider account tiers and legal review remain pending. |
 | Sasha AI product | Live general-purpose assistant prototype with streamed text, optional Fish Audio speech, microphone input and PWA shell. | **Supervised demo only** — not approved for paid, confidential-data or unsupervised customer use. |
@@ -39,8 +39,8 @@ This document separates source-code review from live acceptance testing. A file 
 - Approve/publish, request changes and reject decisions through a protected database RPC.
 - Public directory reads only published business-profile records; applicant contact name/email and private review notes are not copied to the public listing table.
 - Three-submissions-per-contact-email rolling 24-hour database limit, plus a honeypot.
-- A new directory_portal_ready RPC checks the confirmed founder allowlist, required anonymous insert grants, RLS state, required policies, the email rate-limit trigger, founder review RPC permissions and private contact/review-field read restrictions before the form enables.
-- admin/verify.sql now checks founder allowlisting, RLS, policies, portal readiness and anonymous access to private contact fields.
+- The directory_portal_ready RPC checks public-schema tables, anonymous insert grants, RLS, required policies, the email rate-limit trigger, founder review RPC permissions and private-field read restrictions. It now runs as SECURITY INVOKER and does not inspect private Auth data. Founder identity is independently verified by the founder RPC and again inside the review RPC.
+- admin/verify.sql checks founder allowlisting, RLS, policies, readiness/search function privileges, anonymous access to private contact fields, moderation grants and duplicate-index presence.
 
 ### Security and reliability corrections made during this audit
 1. Removed inherited table privileges from PUBLIC, anon and authenticated before re-granting only the required privileges.
@@ -56,17 +56,17 @@ This document separates source-code review from live acceptance testing. A file 
 11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 12. Clarified in the policy notice that the current application form does not accept file or image uploads.
 13. Pinned the browser Supabase SDK to version 2.119.2 rather than following an unpinned major-version CDN tag.
-14. Extended the readiness and verification checks to confirm anonymous users cannot set status, review notes, reviewer identity, review time or submission time.
+14. Extended the readiness and verification checks to confirm anonymous users cannot set status, review notes, reviewer identity, review time or submission time.\n15. Changed the public readiness RPC to SECURITY INVOKER; verified it still returns true under the anon database role.\n16. Added an invoker-rights public directory search RPC with bounded page size/offset and category/location/text filters.\n17. Added a unique partial index preventing duplicate active applications for the same normalized contact email and business name; changes-requested and rejected applications can be resubmitted.\n18. Added founder-only publication-flag updates so approved listings can be hidden and republished without direct public write access.\n19. Founder dashboard now verifies the authenticated user against the database founder allowlist before showing the workspace.
 
 
 ### What remains blocked
 - The latest admin/setup.sql has been applied to the live Supabase project. The confirmed founder Auth user exists and is allowlisted. The public-signup setting has not been independently verified.
-- Supabase reports directory_portal_ready = true and the founder is allowlisted. The public form remains closed through an explicit APPLICATIONS_OPEN=false code gate until live browser/Android QA and operational checks pass.
+- Supabase reports directory_portal_ready = true under the anon role; the readiness function is SECURITY INVOKER. The founder is separately allowlisted. The public form remains closed through an explicit APPLICATIONS_OPEN=false code gate until live browser/Android QA and operational checks pass.
 - Synthetic role-based database tests passed: anonymous application insert; private submission fields inaccessible to anon; founder approval creates exactly one public listing; request-changes and rejection do not publish; the fourth same-email submission in 24 hours is blocked; a non-founder review RPC is rejected; the founder-only private-notes insert succeeds. All synthetic records were rolled back. The actual website form and admin UI have not yet been tested in a browser.
-- The three-per-email rate limit is not a substitute for CAPTCHA or IP-based abuse protection. A bot can rotate email addresses and bypass a honeypot.
+- The three-per-email rate limit, duplicate index and honeypot are not a substitute for CAPTCHA or IP-based abuse protection. A bot can rotate email addresses and bypass a honeypot.
 - Applicants are not email-verified. The authority checkbox is a declaration, not independent proof of business ownership.
-- No duplicate-business detection, edit portal, listing correction/reporting, suspension/removal interface, expiry automation, photo upload, business self-service or email notification is implemented.
-- The public view is a basic listing grid, not a searchable directory with category/location filters or pagination.
+- Duplicate protection currently covers the same normalized contact email and business name while an application is pending or approved; it does not prove ownership or detect duplicates submitted from different email addresses. No applicant edit portal, public listing correction/reporting, expiry automation, photo upload, business self-service or automated email notification is implemented. Founder can hide or republish approved listings from the dashboard.
+- Search, category/location filters and 12-item pagination are now implemented in source and deployed; actual Android/browser interaction tests remain pending.
 - The founder dashboard drafts emails in the user's email app; it does not send them automatically.
 - Existing applications that predate publication consent must not be approved unless consent is collected again.
 
@@ -158,7 +158,7 @@ This document separates source-code review from live acceptance testing. A file 
 4. **Sasha deployment verification:** latest deployment is live and startup logs show the process running; configure `/healthz` as the Render health-check path and complete a direct HTTP test.
 5. **Sasha acceptance tests:** text, context, action truthfulness, provider failure, timeout, voice, microphone, PWA and abuse limits.
 6. **Provider/privacy decisions:** confirm Gemini account tier and data handling; recheck Fish Audio terms before 1 December 2026; decide fallback.
-7. **Operational controls:** moderation, correction/removal, duplicate checks, support and data retention.
+7. **Operational controls:** complete public correction/removal requests, support and data retention; duplicate prevention and founder hide/republish controls are implemented.
 8. **Legal and commercial preparation:** legal review, business identity, address, customer order, tax, payment, cancellation/refund and advertising delivery terms.
 9. **Only after all relevant gates pass:** open applications; only later consider paid placements or a supervised business pilot.
 
