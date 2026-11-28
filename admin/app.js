@@ -69,7 +69,7 @@ async function startMfaSetup(){
    const {error}=await db.auth.mfa.unenroll({factorId:factor.id});
    if(error)throw error;
   }
-  const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"ORBITAL X FUTURE Founder"});
+  const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"ORBITAL X FUTURE Founder "+new Date().toISOString()});
   if(error)throw error;
   mfaFactorId=data.id;mfaMode="enroll";
   const rawQr=data.totp?.qr_code||"";
