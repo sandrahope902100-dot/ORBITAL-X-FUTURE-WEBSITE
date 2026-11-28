@@ -53,7 +53,8 @@ async function loadListings(reset=false){
 }
 async function start(){
  try{
-  if(!window.supabase?.createClient){say("Portal library did not load. Refresh.");return;}
+  await window.supabaseReady;
+  if(!window.supabase?.createClient)throw new Error("Supabase client library unavailable");
   db=window.supabase.createClient(URL,KEY);
   const {data,error}=await db.rpc("directory_portal_ready");
   if(error||data!==true){say("Portal setup could not be verified. Applications remain closed.");button.disabled=true;return;}
