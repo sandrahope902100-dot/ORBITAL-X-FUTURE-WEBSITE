@@ -75,7 +75,7 @@ $notes_policy_reset$;
 
 create policy "Founder can read own notes"
 on public.founder_notes for select to authenticated
-using(auth.uid() = user_id and public.is_orbital_founder());
+using((select auth.uid()) = user_id and (select public.is_orbital_founder()));
 
 create policy "Founder can create own notes"
 on public.founder_notes for insert to authenticated
@@ -83,12 +83,12 @@ with check(auth.uid() = user_id and public.is_orbital_founder());
 
 create policy "Founder can update own notes"
 on public.founder_notes for update to authenticated
-using(auth.uid() = user_id and public.is_orbital_founder())
-with check(auth.uid() = user_id and public.is_orbital_founder());
+using((select auth.uid()) = user_id and (select public.is_orbital_founder()))
+with check((select auth.uid()) = user_id and (select public.is_orbital_founder()));
 
 create policy "Founder can delete own notes"
 on public.founder_notes for delete to authenticated
-using(auth.uid() = user_id and public.is_orbital_founder());
+using((select auth.uid()) = user_id and (select public.is_orbital_founder()));
 
 grant select, insert, update, delete on public.founder_notes to authenticated;
 revoke all on sequence public.founder_notes_id_seq from public, anon, authenticated;
@@ -244,7 +244,7 @@ with check (
 
 create policy "Founder can read business applications"
 on public.business_submissions for select to authenticated
-using(public.is_orbital_founder());
+using((select public.is_orbital_founder()));
 
 -- Only public profile fields are stored in the public listing table.
 create table if not exists public.business_listings (
@@ -312,15 +312,15 @@ using(is_published = true and expires_at > now());
 
 create policy "Founder can read all business listings"
 on public.business_listings for select to authenticated
-using(public.is_orbital_founder());
+using((select public.is_orbital_founder()));
 
 -- Founder-only listing moderation and renewal; only publication and expiry fields are writable.
 grant update (is_published, expires_at) on public.business_listings to authenticated;
 drop policy if exists "Founder can manage listing publication" on public.business_listings;
 create policy "Founder can manage listing publication"
 on public.business_listings for update to authenticated
-using (public.is_orbital_founder())
-with check (public.is_orbital_founder());
+using ((select public.is_orbital_founder()))
+with check ((select public.is_orbital_founder()));
 
 -- Search is invoker-rights and remains subject to the public-listing RLS policy.
 create or replace function public.search_business_directory(
