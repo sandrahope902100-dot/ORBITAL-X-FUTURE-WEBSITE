@@ -1,61 +1,84 @@
 # ORBITAL X FUTURE website
 
-A responsive, static HTML/CSS/JavaScript website for ORBITAL X FUTURE, an independent technology venture founded by Sasha-Lee Nugent.
+Responsive static website for ORBITAL X FUTURE, an independent technology venture. It is not represented as an incorporated or registered company.
 
-## Live website
-https://orbital-x-future.onrender.com/
-
-## Hosting
-- Platform: Render Static Site
+- Live website: https://orbital-x-future.onrender.com/
+- Hosting: Render Static Site
 - Repository: sandrahope902100-dot/ORBITAL-X-FUTURE-WEBSITE
 - Branch: main
-- Build command: `echo "Static site — no build required"`
-- Publish directory: `.`
-- Auto-deploy: enabled for commits to main
+- Publish directory: .
+- Auto-deploy: enabled on commits to main
+- Public contact: orbitalxfuture@gmail.com
 
-## Public contact
-orbitalxfuture@gmail.com
+## Current launch status
 
-## Current business status
-- ORBITAL X FUTURE is described publicly as an independent technology venture. Do not describe it as incorporated or registered.
-- The website is an informational pre-launch site. The directory application interface is present but remains disabled pending live browser/Android testing and the remaining operational/security gates.
-- The directory submission form, founder review dashboard, public approved-listing display, business/service search, category/location filters, pagination, duplicate protection, founder hide/republish/renewal controls, private tracked correction/safety reports and automatic 12-month listing expiry are implemented. Supabase is active and the core role-based workflow has passed synthetic database tests (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
-- Pricing shown on the website is proposed introductory pricing only. It is not an active checkout offer.
-- No payments are currently accepted through the website.
-- Paid placements, listing management, billing, cancellation/refund terms and delivery processes must be finalized before taking payment.
-- Directory enquiries do not create a listing, reserve advertising space or constitute an endorsement.
-- Paid placements must be clearly labelled as advertising; do not promise traffic, leads, sales or search rankings.
+**Pre-launch only. Business applications remain closed. No payments are being accepted and no new business listings should be published.** The public form is intentionally disabled in `assets/directory.js` by `APPLICATIONS_OPEN=false`.
 
-## Product disclosure
-Sasha AI is a supervised demonstration prototype. It is not approved for paid or unsupervised business deployment. See the Sasha AI repository's BUSINESS-READINESS.md for the current engineering assessment.
+The public website explains the venture, Sasha AI and the proposed directory. The directory UI and backend workflow are implemented, but this does not mean the service is ready to accept customers. The live Android/browser application submission and reporting journeys still require end-to-end acceptance testing before applications are opened.
 
+## Directory workflow implemented
 
-## Pre-launch terms and customer protections (28 November 2026)
-- Public page: `policies.html` (linked from the homepage).
-- Standard Listing term: 12 months. Public visibility automatically ends at expiry unless the founder renews it after the business reconfirms its details. Renewal remains free and subject to review.
-- No automatic conversion from a free listing to a paid plan.
-- Proposed paid plans are month-to-month, with no minimum commitment; final cancellation, refund, tax, billing and delivery terms must be supplied in a written order before payment is enabled.
-- Business Plus is described as profile enhancement, not a ranking boost.
-- Featured and Premium are described as sponsored advertising with defined 30-day campaigns and an adjacent Sponsored/Advertisement label.
-- Payment cannot buy verification, favourable reviews, editorial endorsement or guaranteed results.
-- The site currently has no public customer accounts, business self-service editing, checkout, subscription management, booking, lead-management or analytics dashboard. The founder-only admin login and business application/review code exist; Supabase is active and the core database workflow has passed synthetic role-based tests. Actual dashboard sign-in and browser-based form acceptance tests remain outstanding.
-- The privacy notice describes the application data flow, Supabase storage, Render hosting, the esm.sh SDK CDN and Google Fonts. It discloses that no fixed application-record retention period has been set. It remains a pre-launch notice, not a legal compliance certification.
-- Legal identity, business address, governing law, dispute process, tax handling and jurisdiction-specific consumer/privacy review remain launch blockers.
-- Do not accept money, publish listings, promise delivery or sign paid customers until the directory workflow, written customer order, payment method, cancellation/refund process, and applicable legal review are complete.
+1. Applicant submits a business application with separate privacy, authority, subscription-terms and publication consents.
+2. The database stores the application as pending. Anonymous visitors cannot read or alter application records.
+3. The verified founder reviews the application. Approval moves it to `approved_pending_payment`; approval does not publish it. Rejections and change requests do not publish.
+4. The founder sends payment instructions manually by email and marks them as sent.
+5. The founder independently checks that the full payment has cleared in the receiving account. A customer receipt alone is not proof of cleared funds.
+6. The founder records the verified payment reference. Only then is the listing activated and published for one month.
+7. Renewals are manual. The founder sends new instructions during the final 14 days and extends the listing only after independently confirming the new payment.
+8. Listings are excluded from public search after their paid expiry. No automatic card charge or automatic renewal exists.
 
-## Launch gate
-The website may be used to explain the venture and collect voluntary email enquiries only. It is **not a live directory or paid advertising service**. The website commit deploys automatically through Render; verify the latest deployment is live before announcing changes.
+## Proposed monthly packages
 
+Jamaican businesses are billed in JMD; businesses outside Jamaica are billed in USD. The country and selected package determine the amount in the database.
 
-## Directory application and approval system
-- Public homepage form submits new applications as pending only after the SECURITY INVOKER readiness RPC confirms required public tables, RLS policies, anonymous insert grants, rate-limit trigger and private-field read restrictions. Founder authorization is checked independently by the founder RPC and review RPC.
-- Applicants separately consent to privacy processing and to publication of their business profile if approved; the database enforces both.
-- Anonymous visitors can submit but cannot read, change or delete applications.
-- Founder dashboard at /admin/ displays private applications.
-- Only the verified Auth identity orbitalxfuture@gmail.com can review.
-- Approve creates a public listing; request-changes and reject do not publish.
-- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table. Search supports business/service text, category and city/country filters with 12-item pagination. Founder can hide or republish approved profiles. Public correction/safety reports are stored privately, validated against active published listings and handled in the founder moderation queue.
-- Database limit: 3 applications per contact email per rolling 24 hours; a unique partial index blocks duplicate pending/approved applications by normalized contact email and business name. Changes-requested and rejected applications can be resubmitted. Form honeypot supplements these controls. CAPTCHA is not yet included.
-- The latest admin/setup.sql has been applied and admin/verify.sql has been run successfully. The founder email is confirmed and allowlisted. Verify that public sign-ups remain disabled; this Auth setting has not yet been independently confirmed.
-- No file uploads, business self-service editing, payments, subscriptions or customer accounts in this first version.
-- Do not announce applications as open until the Android/browser form test, founder dashboard sign-in test, public Auth sign-up setting, leaked-password protection, retention/legal review and remaining launch checks are complete. The form is intentionally closed in assets/directory.js (APPLICATIONS_OPEN=false).
+| Package | Jamaica | International |
+|---|---:|---:|
+| Standard | J$1,999/month | US$9.99/month |
+| Premium | J$3,999/month | US$19.99/month |
+| Featured | J$6,999/month | US$39.99/month |
+
+Premium and Featured placements are labelled as sponsored advertising. Payment does not buy verification, favourable reviews, editorial endorsement or guaranteed leads, sales or revenue.
+
+## Refund and cancellation terms shown on the website
+
+- If cleared payment is confirmed but OXF cannot publish the approved listing within five business days, the customer is entitled to a full refund.
+- After successful activation, fees are non-refundable except where applicable law requires otherwise.
+- Customers may cancel before the next monthly payment. The current paid period remains active until expiry.
+- There is no automatic charge or renewal.
+
+These are pre-launch terms and still require jurisdiction-specific legal review before paid service begins.
+
+## Security and privacy controls
+
+- Supabase Row Level Security is enabled on the exposed application tables.
+- Public visitors can submit applications and reports but cannot read private submissions, reports or payment settings.
+- Founder access is allowlisted to the verified founder identity and requires an AAL2 (MFA-verified) session for privileged operations.
+- Payment/review state changes run through founder-checked database functions; sensitive helper functions are in the private schema.
+- Public listing search returns only active, published profile fields.
+- Application submissions are limited to three per contact email per rolling 24 hours and duplicate active applications are blocked by a database unique index.
+- Public reports are limited to five per contact email per rolling 24 hours and must reference an active published listing.
+- A hidden honeypot supplements the rate limit. CAPTCHA is not yet implemented; multi-address abuse remains a known limitation.
+- No business self-service accounts, file uploads, checkout, card billing, CRM, lead management or automated email sending are implemented.
+- The privacy notice does not yet set a fixed retention period for application/report records.
+
+The current Supabase security advisor has one warning: leaked-password protection is disabled. The performance advisor reports four indexes not yet used; the health advisor reports no findings. The unused-index notices are informational and should not be removed blindly.
+
+## Launch blockers still to close
+
+- Complete live Android/Chrome tests for application submission, reports, founder review, payment instruction drafting, payment confirmation, publication, hide/republish, renewal and expiry.
+- Add stronger public abuse protection such as CAPTCHA/Turnstile before opening the form.
+- Confirm the public Auth sign-up configuration and complete the leaked-password protection setting where the current Supabase plan permits.
+- Verify the actual JMD and USD receiving instructions privately before any payment email is sent.
+- Establish a records-retention schedule and deletion/request-handling process.
+- Obtain appropriate Jamaica and target-market review of privacy, consumer, advertising, tax and business identity requirements.
+- Confirm that all operational email and refund handling can be delivered reliably.
+
+Do not open applications, accept payment, promise publication or announce paid availability until the launch blockers have been reviewed and the founder explicitly approves launch.
+
+## Sasha AI
+
+Sasha AI is a separate product of ORBITAL X FUTURE and is currently a supervised demonstration prototype. It is not approved for paid or unsupervised business deployment. See the Sasha AI repository's `BUSINESS-READINESS.md` for its separate engineering assessment.
+
+## Deployment notes
+
+The website is a static site with no build step. Commits to `main` deploy automatically through Render. Verify the new deployment is live before announcing a change.
