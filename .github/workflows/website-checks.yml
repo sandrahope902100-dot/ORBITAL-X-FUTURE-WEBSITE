@@ -48,6 +48,8 @@ jobs:
               'const APPLICATIONS_OPEN=false',
               'directory_portal_ready',
               'search_business_directory',
+              'directory_reports',
+              'listing-report-form',
           ]
           missing = [item for item in required_directory if item not in directory]
           if missing:
@@ -58,6 +60,8 @@ jobs:
               'review_business_submission',
               'setPublication',
               'renewListing',
+              'loadReports',
+              'updateReport',
           ]
           missing = [item for item in required_admin if item not in admin]
           if missing:
