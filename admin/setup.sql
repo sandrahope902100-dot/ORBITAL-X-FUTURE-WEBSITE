@@ -524,37 +524,47 @@ as $ready$
   select
     pg_catalog.to_regclass('public.business_submissions') is not null
     and pg_catalog.to_regclass('public.business_listings') is not null
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'business_name', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'category', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'country', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'city', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'description', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'website_url', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'public_email', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'public_phone', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_name', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_email', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'authority_confirmed', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'privacy_consent', 'INSERT')
-    and pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'publication_consent', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'id', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'review_notes', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewed_at', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewer_user_id', 'INSERT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'submitted_at', 'INSERT')
-    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'UPDATE')
-    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'DELETE')
-    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'TRUNCATE')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_name', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'contact_email', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'status', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'review_notes', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewed_at', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'reviewer_user_id', 'SELECT')
-    and not pg_catalog.has_column_privilege('anon', 'public.business_submissions', 'submitted_at', 'SELECT')
-    and not pg_catalog.has_table_privilege('anon', 'public.business_submissions', 'SELECT')
-    and pg_catalog.has_table_privilege('anon', 'public.business_listings', 'SELECT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','business_name','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','category','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','country','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','city','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','description','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','website_url','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','public_email','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','public_phone','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_name','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','authority_confirmed','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','privacy_consent','INSERT')
+    and pg_catalog.has_column_privilege('anon','public.business_submissions','publication_consent','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','id','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','status','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','review_notes','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','reviewed_at','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','reviewer_user_id','INSERT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','submitted_at','INSERT')
+    and not pg_catalog.has_table_privilege('anon','public.business_submissions','SELECT')
+    and not pg_catalog.has_table_privilege('anon','public.business_submissions','UPDATE')
+    and not pg_catalog.has_table_privilege('anon','public.business_submissions','DELETE')
+    and not pg_catalog.has_table_privilege('anon','public.business_submissions','TRUNCATE')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','contact_name','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','contact_email','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','status','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','review_notes','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','reviewed_at','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','reviewer_user_id','SELECT')
+    and not pg_catalog.has_column_privilege('anon','public.business_submissions','submitted_at','SELECT')
+    and pg_catalog.has_table_privilege('anon','public.business_listings','SELECT')
+    and not pg_catalog.has_table_privilege('anon','public.business_listings','INSERT')
+    and not pg_catalog.has_table_privilege('anon','public.business_listings','UPDATE')
+    and not pg_catalog.has_table_privilege('anon','public.business_listings','DELETE')
+    and pg_catalog.has_column_privilege('anon','public.business_listings','expires_at','SELECT')
+    and pg_catalog.has_column_privilege('authenticated','public.business_listings','is_published','UPDATE')
+    and pg_catalog.has_column_privilege('authenticated','public.business_listings','expires_at','UPDATE')
+    and pg_catalog.has_function_privilege('anon','public.search_business_directory(text,text,text,integer,integer)','EXECUTE')
+    and pg_catalog.has_function_privilege('authenticated','public.review_business_submission(uuid,text,text)','EXECUTE')
+    and pg_catalog.has_function_privilege('authenticated','public.is_orbital_founder()','EXECUTE')
+    and pg_catalog.to_regclass('public.business_submissions_active_business_email_uidx') is not null
     and exists (
       select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
       where n.nspname='public' and c.relname='business_submissions' and c.relrowsecurity
@@ -571,7 +581,13 @@ as $ready$
     and exists (
       select 1 from pg_catalog.pg_policies
       where schemaname='public' and tablename='business_listings'
-        and policyname='Anyone can read published business listings' and cmd='SELECT'
+        and policyname='Anyone can read published business listings'
+        and cmd='SELECT' and qual like '%expires_at%'
+    )
+    and exists (
+      select 1 from pg_catalog.pg_policies
+      where schemaname='public' and tablename='business_listings'
+        and policyname='Founder can manage listing publication' and cmd='UPDATE'
     )
     and exists (
       select 1 from pg_catalog.pg_trigger t
@@ -580,8 +596,6 @@ as $ready$
       where n.nspname='public' and c.relname='business_submissions'
         and t.tgname='business_submission_rate_limit' and not t.tgisinternal
     )
-    and pg_catalog.has_function_privilege('authenticated','public.review_business_submission(uuid,text,text)','EXECUTE')
-    and pg_catalog.has_function_privilege('authenticated','public.is_orbital_founder()','EXECUTE')
     and exists (
       select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
       where n.nspname='public' and c.relname='founder_notes' and c.relrowsecurity
