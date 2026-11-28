@@ -15,12 +15,10 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 let db=null,offset=0,loading=false;
 function say(message){if(status)status.textContent=message;}
 function card(b){
- const reportUrl="mailto:orbitalxfuture@gmail.com?subject="+encodeURIComponent("Directory listing correction or report: "+b.business_name)+"&body="+encodeURIComponent("Please review this directory listing.\n\nBusiness: "+b.business_name+"\nLocation: "+b.city+", "+b.country+"\nReason for report or correction request:\n");
  const links=(b.website_url?'<a href="'+esc(b.website_url)+'" target="_blank" rel="noopener noreferrer">Website ↗</a> ':"")+
  (b.public_email?'<a href="mailto:'+esc(b.public_email)+'">Email</a> ':"")+
- (b.public_phone?'<a href="tel:'+esc(b.public_phone)+'">Call</a> ':"")+
- '<a href="'+esc(reportUrl)+'">Report or request correction</a>';
- return '<article class="directory-card"><span>'+esc(b.category)+'</span><h3>'+esc(b.business_name)+'</h3><p>'+esc(b.city)+', '+esc(b.country)+'</p><p>'+esc(b.description)+'</p><p class="listing-links">'+links+'</p></article>';
+ (b.public_phone?'<a href="tel:'+esc(b.public_phone)+'">Call</a> ':"");
+ return '<article class="directory-card"><span>'+esc(b.category)+'</span><h3>'+esc(b.business_name)+'</h3><p>'+esc(b.city)+', '+esc(b.country)+'</p><p>'+esc(b.description)+'</p><p class="listing-links">'+links+'</p><details class="listing-report"><summary>Report or request correction</summary><form class="listing-report-form" data-listing-id="'+esc(b.id)+'" data-listing-name="'+esc(b.business_name)+'"><label>Reason<select name="reason" required><option value="">Choose a reason</option><option value="incorrect_information">Incorrect information</option><option value="business_not_authorized">I represent this business and did not authorize this listing</option><option value="misleading_claim">Misleading or harmful claim</option><option value="closed_business">Business is closed</option><option value="other">Other concern</option></select></label><label>Details<textarea name="details" minlength="20" maxlength="1500" required placeholder="Explain what needs review (20–1,500 characters)."></textarea></label><label>Your email (private)<input name="contact_email" type="email" maxlength="254" required></label><button type="submit">Send report securely</button><p class="report-status" role="status" aria-live="polite"></p></form></details></article>';
 }
 async function loadListings(reset=false){
  if(!db||loading)return;
@@ -75,6 +73,33 @@ async function start(){
   say("The application portal could not confirm its setup. Please try again later.");
  }
 }
+list?.addEventListener("submit",async e=>{
+ const reportForm=e.target.closest(".listing-report-form");
+ if(!reportForm)return;
+ e.preventDefault();
+ const submit=reportForm.querySelector("button[type=submit]");
+ const message=reportForm.querySelector(".report-status");
+ const values=new FormData(reportForm);
+ const payload={
+  listing_id:reportForm.dataset.listingId,
+  listing_name:reportForm.dataset.listingName,
+  reason:String(values.get("reason")||""),
+  details:String(values.get("details")||"").trim(),
+  contact_email:String(values.get("contact_email")||"").trim().toLowerCase()
+ };
+ submit.disabled=true;message.textContent="Sending securely…";
+ try{
+  const {error}=await db.from("directory_reports").insert(payload);
+  if(error){
+   message.textContent=error.message?.includes("Report limit")?"This email has reached the report limit. Please try again later.":"We could not submit the report. Check the details and try again.";
+   return;
+  }
+  reportForm.reset();message.textContent="Report received. The founder will review it. Thank you.";
+ }catch(error){
+  console.error("Directory report submission failed:",error);
+  message.textContent="A connection problem prevented submission. Please try again.";
+ }finally{submit.disabled=false;}
+});
 filterForm?.addEventListener("submit",e=>{e.preventDefault();loadListings(true);});
 moreButton?.addEventListener("click",()=>loadListings(false));
 form?.addEventListener("submit",async e=>{
