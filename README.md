@@ -51,7 +51,7 @@ These are pre-launch terms and still require jurisdiction-specific legal review 
 ## Security and privacy controls
 
 - Supabase Row Level Security is enabled on the exposed application tables.
-- Public visitors can submit applications and reports but cannot read private submissions, reports or payment settings.
+- While the application portal is open, public visitors can submit applications and reports but cannot read private submissions, reports or payment settings. Anonymous direct INSERT permission on business applications is currently revoked at the database level; reopening requires an explicit database permission change as well as the website launch switch.
 - Founder access is allowlisted to the verified founder identity and requires an AAL2 (MFA-verified) session for privileged operations.
 - Payment/review state changes run through founder-checked database functions; sensitive helper functions are in the private schema.
 - Public listing search returns only active, published profile fields.
