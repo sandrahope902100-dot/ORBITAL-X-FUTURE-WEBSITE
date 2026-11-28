@@ -22,7 +22,7 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [x] Build the business submission form with separate privacy and publication consent. [ ] Complete live browser/Android form testing; applications remain closed.
 - [x] Add a SECURITY INVOKER readiness RPC that checks public-schema tables, anonymous insert grants, private-field read restrictions, RLS policies and the rate-limit trigger. Founder authorization is checked separately by the founder RPC and review RPC.
 - [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; the authority checkbox is a declaration only.
-- [x] Build a founder-only review queue with approve/publish, request-changes and reject actions.
+- [x] Build a founder-only review queue with approve/publish, request-changes and reject actions. Request-changes and rejection require a private reason; a stale changes-requested record cannot be approved.
 - [x] Add founder controls to hide and republish approved listings.
 - [x] Add a public prefilled email route for listing correction/report requests. [ ] Build a tracked takedown/case workflow and response-time standard.
 - [x] Enforce a 12-month listing expiry in database RLS and search; founder can renew after business reconfirmation. [ ] Add automated expiry notifications/archive.
