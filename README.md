@@ -82,6 +82,10 @@ Do not open applications, accept payment, promise publication or announce paid a
 
 Sasha AI is a separate product of ORBITAL X FUTURE and is currently a supervised demonstration prototype. It is not approved for paid or unsupervised business deployment. See the Sasha AI repository's `BUSINESS-READINESS.md` for its separate engineering assessment.
 
+## Database migration backup
+
+The complete applied Supabase migration history is currently recorded in the live Supabase project and is not yet maintained as a complete set of SQL migration files in this GitHub repository. Before rebuilding or restoring the database in a new project, export the live schema and applied migrations into version control. The disabled `admin/setup.sql` file is not a current schema backup and must never be used as a restore procedure.
+
 ## Deployment notes
 
 The website is a static site with no build step. Commits to `main` deploy automatically through Render. Verify the new deployment is live before announcing a change.
