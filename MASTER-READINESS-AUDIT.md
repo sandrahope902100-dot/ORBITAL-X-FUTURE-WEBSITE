@@ -22,7 +22,7 @@ This document separates source-code review from live acceptance testing. A file 
 | Directory application form | Public form is coded with separate privacy and publication consent. Supabase readiness returns true, but a code-level launch gate keeps applications closed until live browser/Android QA is complete. | **Database active; synthetic DB workflow tests passed; public UI test pending.** |
 | Founder admin and review | Founder sign-in, private application queue, private notes, approve/publish, request changes and reject are coded. Founder Auth email is confirmed and allowlisted; RLS and RPC roles were tested in Supabase. | **Database permissions/workflow verified; actual dashboard sign-in and queue UI test pending.** |
 | Directory public listings | Approved-profile display reads only published rows and escapes displayed text. Search across business/service text, category and city/country filters, plus 12-item pagination are implemented through an invoker-rights RPC. | **Code and database deployed; live browser/Android QA pending.** |
-| Directory moderation and verification | Founder review, active duplicate protection by normalized contact email/business name, and hide/republish controls are implemented. | **Partially complete** — no independent business verification, applicant email verification, edit/correction portal, public report/takedown workflow or listing expiry automation. |
+| Directory moderation and verification | Founder review, active duplicate protection, hide/republish controls, public report/correction email route and 12-month database-enforced expiry with founder renewal are implemented. | **Partially complete** — no independent business verification, applicant email verification, applicant edit portal, tracked takedown case workflow or automated expiry notification/archive. |
 | Pricing and sales | Proposed free and paid tiers are displayed with pre-launch disclosures. | **Proposal only** — no active offer, order/contract workflow, checkout, invoices, subscription handling, cancellation/refund processing or payment acceptance. |
 | Privacy and security | Directory SQL is active with RLS, column-level anonymous insert permissions, a founder allowlist and an application rate limit. Sasha has server-side API keys, bounded request sizes, in-memory IP throttles and an in-app provider disclosure. | **Partially complete** — fixed retention period, deletion operations, incident response, CAPTCHA, provider account tiers and legal review remain pending. |
 | Sasha AI product | Live general-purpose assistant prototype with streamed text, optional Fish Audio speech, microphone input and PWA shell. | **Supervised demo only** — not approved for paid, confidential-data or unsupervised customer use. |
@@ -56,7 +56,14 @@ This document separates source-code review from live acceptance testing. A file 
 11. Added a basic sitemap and robots.txt rule to keep the founder admin path out of crawler indexing.
 12. Clarified in the policy notice that the current application form does not accept file or image uploads.
 13. Pinned the browser Supabase SDK to version 2.119.2 rather than following an unpinned major-version CDN tag.
-14. Extended the readiness and verification checks to confirm anonymous users cannot set status, review notes, reviewer identity, review time or submission time.\n15. Changed the public readiness RPC to SECURITY INVOKER; verified it still returns true under the anon database role.\n16. Added an invoker-rights public directory search RPC with bounded page size/offset and category/location/text filters.\n17. Added a unique partial index preventing duplicate active applications for the same normalized contact email and business name; changes-requested and rejected applications can be resubmitted.\n18. Added a public listing expiry timestamp, RLS/search exclusion after expiry, and founder renewal control.\n19. Added a prefilled email link for public listing corrections and reports.\n20. Added founder-only publication/expiry updates so approved listings can be hidden, republished and renewed without direct public write access.\n21. Founder dashboard now verifies the authenticated user against the database founder allowlist before showing the workspace.
+14. Extended the readiness and verification checks to confirm anonymous users cannot set status, review notes, reviewer identity, review time or submission time.
+15. Changed the public readiness RPC to SECURITY INVOKER; verified it still returns true under the anon database role.
+16. Added an invoker-rights public directory search RPC with bounded page size/offset and category/location/text filters.
+17. Added a unique partial index preventing duplicate active applications for the same normalized contact email and business name; changes-requested and rejected applications can be resubmitted.
+18. Added a public listing expiry timestamp, RLS/search exclusion after expiry, and founder renewal control.
+19. Added a prefilled email link for public listing corrections and reports.
+20. Added founder-only publication/expiry updates so approved listings can be hidden, republished and renewed without direct public write access.
+21. Founder dashboard now verifies the authenticated user against the database founder allowlist before showing the workspace.
 
 
 ### What remains blocked
@@ -65,8 +72,8 @@ This document separates source-code review from live acceptance testing. A file 
 - Synthetic role-based database tests passed: anonymous application insert; private submission fields inaccessible to anon; founder approval creates exactly one public listing; request-changes and rejection do not publish; the fourth same-email submission in 24 hours is blocked; a non-founder review RPC is rejected; the founder-only private-notes insert succeeds. All synthetic records were rolled back. The actual website form and admin UI have not yet been tested in a browser.
 - The three-per-email rate limit, duplicate index and honeypot are not a substitute for CAPTCHA or IP-based abuse protection. A bot can rotate email addresses and bypass a honeypot.
 - Applicants are not email-verified. The authority checkbox is a declaration, not independent proof of business ownership.
-- Duplicate protection currently covers the same normalized contact email and business name while an application is pending or approved; it does not prove ownership or detect duplicates submitted from different email addresses. No applicant edit portal, public listing correction/reporting, expiry automation, photo upload, business self-service or automated email notification is implemented. Founder can hide or republish approved listings from the dashboard.
-- Search, category/location filters and 12-item pagination are now implemented in source and deployed; actual Android/browser interaction tests remain pending.
+- Duplicate protection covers the same normalized contact email and business name while an application is pending or approved; it does not prove ownership or detect duplicates submitted from different email addresses. No applicant edit portal, photo upload, business self-service or automated applicant email notification is implemented. Public users can request correction/reporting by email; there is no tracked takedown case system. Public visibility expires automatically after 12 months; founder renewal is manual after business reconfirmation.
+- Search, category/location filters and 12-item pagination are implemented and deployed. A rolled-back synthetic database test confirmed anonymous search returned only a published, unexpired listing while excluding an expired listing and a hidden listing. Actual Android/browser interaction tests remain pending.
 - The founder dashboard drafts emails in the user's email app; it does not send them automatically.
 - Existing applications that predate publication consent must not be approved unless consent is collected again.
 
@@ -85,6 +92,13 @@ This document separates source-code review from live acceptance testing. A file 
 **Founder dashboard:** https://orbital-x-future.onrender.com/admin/  
 **Public application section:** https://orbital-x-future.onrender.com/#advertise
 
+### Current Supabase security-advisor interpretation (28 November 2026)
+- `directory_portal_ready()` and `search_business_directory()` are SECURITY INVOKER functions; both were tested under the anon role. The readiness RPC returned true, and a rolled-back synthetic test confirmed search excludes hidden and expired rows.
+- `is_orbital_founder()` and `review_business_submission()` remain SECURITY DEFINER by design. They have a fixed empty search_path, EXECUTE is limited to authenticated users, the founder helper checks the immutable allowlist against the confirmed Auth user, and the review function repeats founder authorization internally before changing status or publishing. Do not revoke these grants without replacing the founder-review design.
+- Supabase still reports generic SECURITY DEFINER advisor warnings for those two restricted functions, plus an INFO notice because `private.founder_admins` has RLS but no policies. The private schema has no USAGE grants to anon/authenticated/service_role and the table has no non-postgres table grants; the no-policy notice is intentional defense in depth.
+- Supabase also reports leaked-password protection disabled. Current Supabase documentation says this feature is available on Pro and above. If the project is on Free, it cannot be enabled without upgrading; use a strong founder password and the strongest available password-strength settings. Public signup configuration is not exposed by the available project tools and still needs a dashboard check.
+- Latest Supabase health advisor is clean. Performance advisor only reports two newly added indexes as unused because the database currently contains zero application/listing rows; do not remove them based on an empty-database usage counter.
+
 ## 4. Pricing, legal and revenue readiness
 
 - Standard Listing is proposed as free. Direct listing revenue from a Standard Listing is **US$0**.
@@ -92,7 +106,7 @@ This document separates source-code review from live acceptance testing. A file 
 - No payments are accepted and no package is currently purchasable.
 - No customer order/contract record, payment provider, invoice/receipt, tax handling, subscription state, cancellation, refund, failed-payment or advertising delivery workflow exists.
 - No traffic, leads, sales, search ranking or business outcomes are guaranteed.
-- Standard Listing expiry is enforced by the database after 12 months; expired rows are no longer visible to public roles. Founder renewal is manual and must follow business reconfirmation. No scheduled deletion/archive or applicant notification automation exists.
+- Standard Listing expiry is enforced by RLS and search after 12 months; expired rows are no longer visible to public roles. Founder renewal is manual and must follow business reconfirmation. No scheduled deletion/archive or applicant notification automation exists.
 - The privacy/terms page is a pre-launch draft, not a legal compliance certification. It still needs jurisdiction-specific review and final legal identity, business address, governing law, dispute process, tax and consumer/privacy obligations before paid service.
 - ORBITAL X FUTURE must continue to be described as an independent technology venture, not an incorporated/registered company, until legal registration is completed.
 
@@ -158,7 +172,7 @@ This document separates source-code review from live acceptance testing. A file 
 4. **Sasha deployment verification:** latest deployment is live and startup logs show the process running; configure `/healthz` as the Render health-check path and complete a direct HTTP test.
 5. **Sasha acceptance tests:** text, context, action truthfulness, provider failure, timeout, voice, microphone, PWA and abuse limits.
 6. **Provider/privacy decisions:** confirm Gemini account tier and data handling; recheck Fish Audio terms before 1 December 2026; decide fallback.
-7. **Operational controls:** complete public correction/removal requests, support and data retention; duplicate prevention and founder hide/republish controls are implemented.
+7. **Operational controls:** complete tracked takedown handling, support and data retention; duplicate prevention, public expiry and founder hide/republish/renew controls are implemented.
 8. **Legal and commercial preparation:** legal review, business identity, address, customer order, tax, payment, cancellation/refund and advertising delivery terms.
 9. **Only after all relevant gates pass:** open applications; only later consider paid placements or a supervised business pilot.
 
