@@ -10,7 +10,7 @@ const categoryInput=document.getElementById("directoryCategory");
 const locationInput=document.getElementById("directoryLocation");
 const moreButton=document.getElementById("directoryLoadMore");
 const PAGE_SIZE=12;
-const APPLICATIONS_OPEN=true;
+const APPLICATIONS_OPEN=false;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 let db=null,offset=0,loading=false;
 function createPublicClient(){
