@@ -17,13 +17,16 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Obtain jurisdiction-specific legal review and confirm the final service provider identity, business contact address, governing law, dispute process and tax treatment.
 
 ## B. Directory product — NOT COMPLETE
-- [x] Create Supabase storage for private business applications and approved public listings.\n- [x] Add public search across business/service text, category and city/country, category/location filters and 12-item pagination. [ ] Complete live browser/Android QA.
-- [x] Build the first business submission form with separate privacy and publication consent; Supabase is active and core role-based database workflow tests passed. [ ] Complete live browser/Android form testing; form remains closed.
-- [x] Add a SECURITY INVOKER readiness RPC that checks public-schema tables, required anonymous insert grants, private-field read restrictions, RLS policies and rate-limit trigger. Founder authorization is checked separately by the founder RPC and review RPC.
-- [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; current authority checkbox is a declaration only.
-- [x] Build a founder-only pending-application review queue with approve/publish, request-changes and reject actions. Founder can hide and republish approved listings. [x] Add a public email route for listing correction/report requests and database-enforced 12-month public expiry with founder renewal controls. [ ] Add a tracked takedown/case workflow and automated expiry notifications/archive.
+- [x] Create Supabase storage for private business applications and approved public listings.
+- [x] Add public search across business/service text, category and city/country, category/location filters and 12-item pagination. [ ] Complete live browser/Android QA.
+- [x] Build the business submission form with separate privacy and publication consent. [ ] Complete live browser/Android form testing; applications remain closed.
+- [x] Add a SECURITY INVOKER readiness RPC that checks public-schema tables, anonymous insert grants, private-field read restrictions, RLS policies and the rate-limit trigger. Founder authorization is checked separately by the founder RPC and review RPC.
+- [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; the authority checkbox is a declaration only.
+- [x] Build a founder-only review queue with approve/publish, request-changes and reject actions.
+- [x] Add founder controls to hide and republish approved listings.
+- [x] Add a public prefilled email route for listing correction/report requests. [ ] Build a tracked takedown/case workflow and response-time standard.
+- [x] Enforce a 12-month listing expiry in database RLS and search; founder can renew after business reconfirmation. [ ] Add automated expiry notifications/archive.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
-- [x] Add a prefilled public email route to report/correct a listing. [ ] Build a tracked report/takedown case workflow and response-time standard.
 - [ ] Define category taxonomy, neutral default sort order and sponsored inventory limits.
 - [ ] Add CAPTCHA/bot protection beyond the honeypot and email rate limit; test accessibility, mobile layout, security, backups and data export/deletion.
 - [ ] Add a clear business contact and support process before accepting submissions.
@@ -42,7 +45,9 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 ## D. Privacy, security and trust
 - [x] Founder-only admin login and business application/review interfaces are implemented; Supabase is active, founder is confirmed/allowlisted and core database workflow tests passed. Dashboard now verifies the founder allowlist through RPC. [ ] Test actual dashboard sign-in and queue UI.
 - [x] No public customer account system, checkout or subscription management is implemented.
-- [x] General contact route is an email link; business application form is intentionally disabled pending live browser/Android acceptance testing. Visitors are warned not to send sensitive data.\n- [ ] Enable Supabase leaked-password protection; current security advisor reports it disabled.
+- [x] General contact route is an email link; business application form is intentionally disabled pending live browser/Android acceptance testing. Visitors are warned not to send sensitive data.
+- [ ] Verify public Auth sign-ups are disabled in Supabase Authentication settings.
+- [ ] Enable leaked-password protection if the Supabase plan supports it; current security advisor reports it disabled. Supabase documents this feature as Pro plan and above; if this project is on Free, use the strongest available password policy and keep the founder password strong.
 - [ ] Decide what personal/business data will be collected when the directory launches and collect only what is necessary.
 - [ ] Set retention and deletion periods, access controls, backup protection and incident response.
 - [ ] Review hosting, email, analytics and payment processors as data processors/service providers.
