@@ -19,7 +19,7 @@ orbitalxfuture@gmail.com
 ## Current business status
 - ORBITAL X FUTURE is described publicly as an independent technology venture. Do not describe it as incorporated or registered.
 - The website is an informational pre-launch site. The directory application interface is present but remains disabled until the database is configured and verified.
-- The directory submission form, founder review dashboard and public approved-listing display are implemented in code. Supabase is activated and the core role-based database workflow has been tested with synthetic records (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
+- The directory submission form, founder review dashboard, public approved-listing display, business/service search, category/location filters, pagination, duplicate protection and founder hide/republish controls are implemented. Supabase is active and the core role-based workflow has passed synthetic database tests (approval publishes; request-changes and rejection do not). All test records were rolled back. The public form remains intentionally closed pending live browser/Android testing and final operational checks.
 - Pricing shown on the website is proposed introductory pricing only. It is not an active checkout offer.
 - No payments are currently accepted through the website.
 - Paid placements, listing management, billing, cancellation/refund terms and delivery processes must be finalized before taking payment.
@@ -48,14 +48,14 @@ The website may be used to explain the venture and collect voluntary email enqui
 
 
 ## Directory application and approval system
-- Public homepage form submits new applications as pending only after the readiness RPC confirms the confirmed founder is allowlisted, required tables and RLS policies exist, anonymous insert grants are correct, and private applicant fields are not readable.
+- Public homepage form submits new applications as pending only after the SECURITY INVOKER readiness RPC confirms required public tables, RLS policies, anonymous insert grants, rate-limit trigger and private-field read restrictions. Founder authorization is checked independently by the founder RPC and review RPC.
 - Applicants separately consent to privacy processing and to publication of their business profile if approved; the database enforces both.
 - Anonymous visitors can submit but cannot read, change or delete applications.
 - Founder dashboard at /admin/ displays private applications.
 - Only the verified Auth identity orbitalxfuture@gmail.com can review.
 - Approve creates a public listing; request-changes and reject do not publish.
-- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table.
-- Database limit: 3 applications per contact email per rolling 24 hours; form honeypot supplements it. CAPTCHA is not yet included.
+- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table. Search supports business/service text, category and city/country filters with 12-item pagination. Founder can hide or republish approved profiles.
+- Database limit: 3 applications per contact email per rolling 24 hours; a unique partial index blocks duplicate pending/approved applications by normalized contact email and business name. Changes-requested and rejected applications can be resubmitted. Form honeypot supplements these controls. CAPTCHA is not yet included.
 - The latest admin/setup.sql has been applied and admin/verify.sql has been run successfully. The founder email is confirmed and allowlisted. Verify that public sign-ups remain disabled; this Auth setting has not yet been independently confirmed.
 - No file uploads, business self-service editing, payments, subscriptions or customer accounts in this first version.
-- Do not announce applications as open until the Android/browser form test, founder dashboard sign-in test, retention/legal review and remaining launch checks are complete. The form is intentionally closed in assets/directory.js (APPLICATIONS_OPEN=false).
+- Do not announce applications as open until the Android/browser form test, founder dashboard sign-in test, public Auth sign-up setting, leaked-password protection, retention/legal review and remaining launch checks are complete. The form is intentionally closed in assets/directory.js (APPLICATIONS_OPEN=false).
