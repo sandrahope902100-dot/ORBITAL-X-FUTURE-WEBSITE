@@ -26,7 +26,7 @@ function show(on){
  if(on)$("mfaGate").hidden=true;
  else clearFounderWorkspace();
 }
-function showMfaGate(){ $("loginView").hidden=true;$("dashboardView").hidden=true;$("mfaGate").hidden=false; }
+function showMfaGate(){ clearFounderWorkspace();$("loginView").hidden=true;$("dashboardView").hidden=true;$("mfaGate").hidden=false; }
 async function openFounderDashboard(){
  $("mfaGate").hidden=true;show(true);
  await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
