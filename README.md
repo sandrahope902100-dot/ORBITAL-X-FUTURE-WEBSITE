@@ -54,7 +54,7 @@ The website may be used to explain the venture and collect voluntary email enqui
 - Founder dashboard at /admin/ displays private applications.
 - Only the verified Auth identity orbitalxfuture@gmail.com can review.
 - Approve creates a public listing; request-changes and reject do not publish.
-- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table. Search supports business/service text, category and city/country filters with 12-item pagination. Founder can hide or republish approved profiles.
+- Public directory reads only published profile records; private applicant name/email and review notes are never copied to the public table. Search supports business/service text, category and city/country filters with 12-item pagination. Founder can hide or republish approved profiles. Public correction/safety reports are stored privately, validated against active published listings and handled in the founder moderation queue.
 - Database limit: 3 applications per contact email per rolling 24 hours; a unique partial index blocks duplicate pending/approved applications by normalized contact email and business name. Changes-requested and rejected applications can be resubmitted. Form honeypot supplements these controls. CAPTCHA is not yet included.
 - The latest admin/setup.sql has been applied and admin/verify.sql has been run successfully. The founder email is confirmed and allowlisted. Verify that public sign-ups remain disabled; this Auth setting has not yet been independently confirmed.
 - No file uploads, business self-service editing, payments, subscriptions or customer accounts in this first version.
