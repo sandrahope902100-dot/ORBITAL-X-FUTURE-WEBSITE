@@ -82,9 +82,15 @@ async function loadListings(reset=false){
 async function start(){
  try{
   db=createPublicClient();
-  const {data,error}=await db.rpc("directory_portal_ready");
-  if(error||data!==true){say("Portal setup could not be verified. Applications remain closed.");button.disabled=true;return;}
+  // Public search remains available even while application intake is closed.
   await loadListings(true);
+  const {data,error}=await db.rpc("directory_portal_ready");
+  if(error||data!==true){
+   button.disabled=true;
+   button.textContent="Applications temporarily closed";
+   say("Applications are closed during pre-launch testing. Approved listings remain searchable.");
+   return;
+  }
   if(!APPLICATIONS_OPEN){
    button.disabled=true;
    button.textContent="Applications temporarily closed";
