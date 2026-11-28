@@ -106,3 +106,24 @@ select
 select
   position('A changes-requested application cannot be approved' in pg_get_functiondef('public.review_business_submission(uuid,text,text)'::regprocedure)) > 0 as stale_application_cannot_be_approved,
   position('A review note is required for this decision.' in pg_get_functiondef('public.review_business_submission(uuid,text,text)'::regprocedure)) > 0 as rejection_and_change_notes_required;
+
+
+-- 9. Directory reports are insert-only for the public; only the founder can read/update them.
+select
+  exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+         where n.nspname='public' and c.relname='directory_reports' and c.relrowsecurity) as reports_rls_enabled,
+  has_column_privilege('anon','public.directory_reports','listing_id','INSERT') as anon_can_submit_report,
+  has_table_privilege('anon','public.directory_reports','SELECT') as anon_can_read_reports,
+  has_table_privilege('anon','public.directory_reports','UPDATE') as anon_can_update_reports,
+  has_table_privilege('anon','public.directory_reports','DELETE') as anon_can_delete_reports,
+  has_column_privilege('authenticated','public.directory_reports','status','UPDATE') as founder_role_can_update_status,
+  exists(select 1 from pg_catalog.pg_trigger t
+         join pg_catalog.pg_class c on c.oid=t.tgrelid
+         join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+         where n.nspname='public' and c.relname='directory_reports'
+           and t.tgname='directory_report_rate_limit' and not t.tgisinternal) as report_rate_limit_trigger_exists,
+  exists(select 1 from pg_catalog.pg_trigger t
+         join pg_catalog.pg_class c on c.oid=t.tgrelid
+         join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+         where n.nspname='public' and c.relname='directory_reports'
+           and t.tgname='validate_directory_report_before_insert' and not t.tgisinternal) as report_target_validation_trigger_exists;
