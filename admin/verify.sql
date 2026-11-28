@@ -100,3 +100,9 @@ select
       and policyname='Anyone can read published business listings'
       and qual like '%expires_at%'
   ) as public_policy_checks_expiry;
+
+
+-- 9. Verify strict review transitions and documented rejection reasons.
+select
+  position('A changes-requested application cannot be approved' in pg_get_functiondef('public.review_business_submission(uuid,text,text)'::regprocedure)) > 0 as stale_application_cannot_be_approved,
+  position('A review note is required for this decision.' in pg_get_functiondef('public.review_business_submission(uuid,text,text)'::regprocedure)) > 0 as rejection_and_change_notes_required;
