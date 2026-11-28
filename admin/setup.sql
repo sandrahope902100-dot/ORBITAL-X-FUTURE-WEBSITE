@@ -260,15 +260,36 @@ create table if not exists public.business_listings (
   public_email text,
   public_phone text,
   is_published boolean not null default true,
-  published_at timestamptz not null default now()
+  published_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '365 days'),
+  constraint business_listings_expiry_after_publish_check check (expires_at > published_at)
 );
 
 create index if not exists business_listings_public_idx
 on public.business_listings(is_published, category, business_name);
 
+alter table public.business_listings
+add column if not exists expires_at timestamptz not null default (now() + interval '365 days');
+
+do $listing_expiry_constraint$
+begin
+  if not exists (
+    select 1 from pg_catalog.pg_constraint
+    where conname='business_listings_expiry_after_publish_check'
+      and conrelid='public.business_listings'::regclass
+  ) then
+    alter table public.business_listings
+    add constraint business_listings_expiry_after_publish_check
+    check (expires_at > published_at);
+  end if;
+end
+$listing_expiry_constraint$;
+
+
+
 alter table public.business_listings enable row level security;
 revoke all on public.business_listings from public, anon, authenticated;
-revoke all (id, submission_id, slug, business_name, category, country, city, description, website_url, public_email, public_phone, is_published, published_at) on table public.business_listings from public, anon, authenticated;
+revoke all (id, submission_id, slug, business_name, category, country, city, description, website_url, public_email, public_phone, is_published, published_at, expires_at) on table public.business_listings from public, anon, authenticated;
 
 do $listings_policy_reset$
 declare p record;
@@ -287,14 +308,14 @@ grant select on public.business_listings to anon, authenticated;
 
 create policy "Anyone can read published business listings"
 on public.business_listings for select to anon, authenticated
-using(is_published = true);
+using(is_published = true and expires_at > now());
 
 create policy "Founder can read all business listings"
 on public.business_listings for select to authenticated
 using(public.is_orbital_founder());
 
 -- Founder-only listing moderation; only the publication flag is writable.
-grant update (is_published) on public.business_listings to authenticated;
+grant update (is_published, expires_at) on public.business_listings to authenticated;
 drop policy if exists "Founder can manage listing publication" on public.business_listings;
 create policy "Founder can manage listing publication"
 on public.business_listings for update to authenticated
@@ -322,6 +343,7 @@ as $directory$
          b.website_url,b.public_email,b.public_phone
   from public.business_listings b
   where b.is_published = true
+    and b.expires_at > now()
     and (
       nullif(pg_catalog.btrim(p_search),'') is null
       or b.business_name ilike '%' || pg_catalog.btrim(p_search) || '%'
