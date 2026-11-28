@@ -3,7 +3,11 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UnC_A_hZ7jUkxw"
 const FOUNDER="orbitalxfuture@gmail.com";const $=id=>document.getElementById(id);let db=null,ready=false;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const msg=(id,t)=>{$(id).textContent=t||"";};
-const isFounder=s=>Boolean(s?.user?.email?.toLowerCase()===FOUNDER&&s.user.email_confirmed_at);
+async function verifyFounder(session){
+ if(!session?.user?.email_confirmed_at||session.user.email?.toLowerCase()!==FOUNDER)return false;
+ const {data,error}=await db.rpc("is_orbital_founder");
+ return !error&&data===true;
+}
 function show(on){$("loginView").hidden=on;$("dashboardView").hidden=!on;}
 async function notes(){
  try{
@@ -17,12 +21,29 @@ async function notes(){
 }
 async function approved(){
  try{
-  const {data,error}=await db.from("business_listings").select("business_name,category,city,country,is_published,published_at").order("published_at",{ascending:false});
+  const {data,error}=await db.from("business_listings").select("id,business_name,category,city,country,is_published,published_at").order("published_at",{ascending:false});
   if(error){$("approvedListings").textContent="Could not load listings.";return;}
-  $("approvedListings").innerHTML=data?.length?data.map(x=>'<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p></div><span class="status-pill">'+(x.is_published?"Published":"Hidden")+'</span></article>').join(""):'<p class="muted">No approved listings yet.</p>';
+  $("approvedListings").innerHTML=data?.length?data.map(x=>'<article class="approved-row"><div><strong>'+esc(x.business_name)+'</strong><p>'+esc(x.category)+' · '+esc(x.city)+', '+esc(x.country)+'</p><small>'+esc(new Date(x.published_at).toLocaleDateString())+'</small></div><div class="listing-admin-actions"><span class="status-pill">'+(x.is_published?"Published":"Hidden")+'</span><button class="secondary" type="button" data-publish-id="'+esc(x.id)+'" data-publish-next="'+(!x.is_published)+'">'+(x.is_published?"Unpublish":"Republish")+'</button></div></article>').join(""):'<p class="muted">No approved listings yet.</p>';
+  $("approvedListings").querySelectorAll("[data-publish-id]").forEach(b=>b.addEventListener("click",()=>setPublication(b.dataset.publishId,b.dataset.publishNext==="true",b)));
  }catch(error){
   console.error("Approved listings could not load:",error);
   $("approvedListings").textContent="Approved listings could not be loaded right now.";
+ }
+}
+async function setPublication(id,publish,button){
+ if(!confirm(publish?"Republish this business profile?":"Hide this business profile from the public directory?"))return;
+ button.disabled=true;
+ msg("applicationMessage","Updating public listing status…");
+ try{
+  const {error}=await db.from("business_listings").update({is_published:publish}).eq("id",id);
+  if(error){msg("applicationMessage","Listing status was not changed. Check founder permissions and try again.");return;}
+  msg("applicationMessage",publish?"Business profile republished.":"Business profile hidden from public view.");
+  await approved();
+ }catch(error){
+  console.error("Listing moderation failed:",error);
+  msg("applicationMessage","The listing status could not be changed. Refresh and verify before retrying.");
+ }finally{
+  button.disabled=false;
  }
 }
 async function loadApps(){
@@ -77,7 +98,7 @@ async function init(){
   const {data,error}=await db.auth.getSession();
   if(error)throw error;
   const session=data?.session;
-  if(session&&!isFounder(session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}
+  if(session&&!(await verifyFounder(session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   show(Boolean(session));
   if(session)await Promise.all([notes(),loadApps()]);
  }catch(error){
@@ -93,7 +114,7 @@ $("loginForm").addEventListener("submit",async e=>{
  try{
   const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error){msg("loginMessage","Sign-in failed. Check credentials and Supabase Auth setup.");return;}
-  if(!isFounder(data.session)){await db.auth.signOut();msg("loginMessage","This is not the verified founder account.");return;}
+  if(!(await verifyFounder(data.session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   msg("loginMessage","");
   show(true);
   await Promise.all([notes(),loadApps()]);
