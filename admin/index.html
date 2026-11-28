@@ -9,6 +9,16 @@
   <link rel="stylesheet" href="./styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
   <script defer src="./app.js"></script>
+<style>
+.mfa-panel{max-width:560px;margin:42px auto;padding:28px}
+.mfa-panel h2{margin:0 0 10px}
+.mfa-panel p{line-height:1.7}
+.mfa-qr-wrap{display:grid;place-items:center;background:#fff;border-radius:14px;padding:16px;margin:18px 0}
+.mfa-qr-wrap img{width:min(100%,240px);height:auto}
+.mfa-secret{display:block;overflow-wrap:anywhere;padding:12px;background:#0b1423;border:1px solid rgba(85,184,255,.3);border-radius:10px;color:#dcecff;user-select:all}
+.mfa-code{letter-spacing:.3em;font-size:1.25rem;text-align:center}
+.mfa-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+</style>
 </head>
 <body>
   <main class="shell">
@@ -31,6 +41,33 @@
           <p id="loginMessage" class="message" role="status"></p>
         </form>
         <p class="tiny">Access is managed through Supabase authentication. Public account registration is not provided here.</p>
+      </div>
+    </section>
+
+    <section id="mfaGate" class="login-wrap" hidden>
+      <div class="panel login-panel mfa-panel">
+        <p class="eyebrow">SECURE ACCESS / MFA REQUIRED</p>
+        <h1>Verify<br><span>your identity.</span></h1>
+        <p class="muted">Founder workspace access now requires a verified authenticator code. Keep your authenticator app and this sign-in private.</p>
+        <div id="mfaSetup">
+          <h2>Set up an authenticator</h2>
+          <p class="muted">Use Google Authenticator, Microsoft Authenticator, or another TOTP authenticator app. You can enter the setup key manually if this is the same phone displaying this page.</p>
+          <button type="button" id="startMfaButton">Set up two-factor authentication</button>
+        </div>
+        <div id="mfaQrPanel" hidden>
+          <p><strong>1. Add this account to your authenticator app.</strong></p>
+          <div class="mfa-qr-wrap"><img id="mfaQrImage" alt="Authenticator setup QR code"></div>
+          <p class="muted">If you cannot scan the QR code, enter this setup key manually in your authenticator app:</p>
+          <code id="mfaSecret" class="mfa-secret"></code>
+          <p class="tiny">Do not share this key or the six-digit codes with anyone. Save the account in your authenticator before continuing.</p>
+        </div>
+        <form id="mfaVerifyForm" hidden>
+          <label for="mfaCode">Six-digit authenticator code</label>
+          <input id="mfaCode" class="mfa-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+          <button type="submit" id="mfaVerifyButton">Verify and enter Founder Dashboard</button>
+        </form>
+        <p id="mfaMessage" class="message" role="status" aria-live="polite"></p>
+        <div class="mfa-actions"><button type="button" class="secondary" id="mfaSignOutButton">Sign out</button></div>
       </div>
     </section>
 
