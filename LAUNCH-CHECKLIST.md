@@ -67,6 +67,7 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [x] Public website attributes the venture to founder Sasha-Lee Nugent.
 - [x] Public contact email is orbitalxfuture@gmail.com.
 - [ ] Confirm control and recovery access for the business email, domain/hosting accounts and repositories.
+- [ ] Confirm GitHub Actions is enabled and the new website release-check workflow completes successfully.
 - [ ] Protect the public GitHub repository's `main` branch with a ruleset requiring pull requests and blocking force-push/deletion; enable MFA on the GitHub account.
 - [ ] Configure and verify baseline security response headers in Render Dashboard → service → Settings → Headers.
 
