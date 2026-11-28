@@ -62,3 +62,24 @@ select
   (select count(*) from public.business_submissions where status='approved') as approved_applications,
   (select count(*) from public.business_submissions where status='rejected') as rejected_applications,
   (select count(*) from public.business_listings where is_published=true) as published_listings;
+
+
+-- 6. Verify public discovery and moderation boundaries.
+select
+  (select prosecdef from pg_proc where oid='public.directory_portal_ready()'::regprocedure) as readiness_is_security_definer,
+  (select prosecdef from pg_proc where oid='public.search_business_directory(text,text,text,integer,integer)'::regprocedure) as search_is_security_definer,
+  has_function_privilege('anon','public.directory_portal_ready()','EXECUTE') as anon_can_check_readiness,
+  has_function_privilege('anon','public.search_business_directory(text,text,text,integer,integer)','EXECUTE') as anon_can_search_published_directory,
+  has_function_privilege('anon','public.review_business_submission(uuid,text,text)','EXECUTE') as anon_can_review,
+  has_table_privilege('anon','public.business_submissions','SELECT') as anon_can_read_applications,
+  has_column_privilege('anon','public.business_submissions','contact_email','SELECT') as anon_can_read_private_email,
+  has_column_privilege('anon','public.business_submissions','status','INSERT') as anon_can_set_application_status,
+  has_table_privilege('anon','public.business_listings','UPDATE') as anon_can_moderate_listings,
+  has_column_privilege('authenticated','public.business_listings','is_published','UPDATE') as founder_role_can_change_publication_flag,
+  to_regclass('public.business_submissions_active_business_email_uidx') is not null as duplicate_application_index_exists;
+
+-- 7. Counts only; never return private applicant data in this verification report.
+select
+  (select count(*) from public.business_submissions) as total_applications,
+  (select count(*) from public.business_listings where is_published=true) as published_listings,
+  (select count(*) from public.business_listings where is_published=false) as hidden_listings;
