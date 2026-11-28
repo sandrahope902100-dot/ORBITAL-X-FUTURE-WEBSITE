@@ -137,6 +137,7 @@ form?.addEventListener("submit",async e=>{
  }
  button.disabled=true;say("Submitting securely…");
  const row={
+  subscription_plan:String(f.get("subscription_plan")||"standard"),
   business_name:String(f.get("business_name")||"").trim(),
   category:String(f.get("category")||""),
   country:String(f.get("country")||"").trim(),
