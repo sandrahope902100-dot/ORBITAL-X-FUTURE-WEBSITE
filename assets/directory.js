@@ -13,6 +13,33 @@ const PAGE_SIZE=12;
 const APPLICATIONS_OPEN=true;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 let db=null,offset=0,loading=false;
+function createPublicClient(){
+ const headers={apikey:KEY,Authorization:"Bearer "+KEY};
+ return {
+  async rpc(name,args={}){
+   try{
+    const response=await fetch(URL+"/rest/v1/rpc/"+encodeURIComponent(name),{
+     method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify(args)
+    });
+    const body=await response.text();
+    let data=null;try{data=body?JSON.parse(body):null;}catch{}
+    return {data,error:response.ok?null:(data||{message:body||"Request failed",status:response.status})};
+   }catch(error){return {data:null,error};}
+  },
+  from(table){
+   return {insert:async row=>{
+    try{
+     const response=await fetch(URL+"/rest/v1/"+encodeURIComponent(table),{
+      method:"POST",headers:{...headers,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)
+     });
+     const body=await response.text();
+     let error=null;if(!response.ok){try{error=JSON.parse(body);}catch{error={message:body||"Request failed",status:response.status};}}
+     return {error};
+    }catch(error){return {error};}
+   }};
+  }
+ };
+}
 function say(message){if(status)status.textContent=message;}
 function card(b){
  const links=(b.website_url?'<a href="'+esc(b.website_url)+'" target="_blank" rel="noopener noreferrer">Website ↗</a> ':"")+
@@ -53,9 +80,7 @@ async function loadListings(reset=false){
 }
 async function start(){
  try{
-  await window.supabaseReady;
-  if(!window.supabase?.createClient)throw new Error("Supabase client library unavailable");
-  db=window.supabase.createClient(URL,KEY);
+  db=createPublicClient();
   const {data,error}=await db.rpc("directory_portal_ready");
   if(error||data!==true){say("Portal setup could not be verified. Applications remain closed.");button.disabled=true;return;}
   await loadListings(true);
