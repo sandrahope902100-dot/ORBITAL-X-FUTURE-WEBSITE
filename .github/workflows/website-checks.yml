@@ -30,6 +30,8 @@ jobs:
           html = Path("index.html").read_text()
           directory = Path("assets/directory.js").read_text()
           admin = Path("admin/app.js").read_text()
+          setup = Path("admin/setup.sql").read_text()
+          verify = Path("admin/verify.sql").read_text()
 
           required_html = [
               'id="directoryFilterForm"',
@@ -66,6 +68,30 @@ jobs:
           missing = [item for item in required_admin if item not in admin]
           if missing:
               raise SystemExit(f"Missing required founder controls: {missing}")
+
+          required_sql = [
+              "create table if not exists public.directory_reports",
+              "Anyone can submit directory reports",
+              "Founder can read directory reports",
+              "Founder can update directory reports",
+              "limit_directory_reports",
+              "validate_directory_report",
+              "directory_report_rate_limit",
+              "validate_directory_report_before_insert",
+          ]
+          missing = [item for item in required_sql if item not in setup]
+          if missing:
+              raise SystemExit(f"Missing report database safeguards: {missing}")
+
+          required_verify = [
+              "reports_rls_enabled",
+              "anon_can_read_reports",
+              "report_rate_limit_trigger_exists",
+              "report_target_validation_trigger_exists",
+          ]
+          missing = [item for item in required_verify if item not in verify]
+          if missing:
+              raise SystemExit(f"Missing report verification checks: {missing}")
 
           print("Required website controls and closed launch gate verified.")
           PY
