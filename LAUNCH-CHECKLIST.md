@@ -24,7 +24,7 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [x] Add duplicate protection for the same normalized contact email and business name while pending/approved. [ ] Add independent business-claim ownership verification; the authority checkbox is a declaration only.
 - [x] Build a founder-only review queue with approve/publish, request-changes and reject actions. Request-changes and rejection require a private reason; a stale changes-requested record cannot be approved.
 - [x] Add founder controls to hide and republish approved listings.
-- [x] Add a public prefilled email route for listing correction/report requests. [ ] Build a tracked takedown/case workflow and response-time standard.
+- [x] Add a structured public correction/safety report form, private report storage, founder-only moderation queue, status tracking, resolution notes, published-listing validation and five-per-email daily abuse limit. [ ] Set a response-time standard and automated reporter notifications.
 - [x] Enforce a 12-month listing expiry in database RLS and search; founder can renew after business reconfirmation. [ ] Add automated expiry notifications/archive.
 - [ ] Define a factual verification standard and display exactly what was checked and when.
 - [ ] Define category taxonomy, neutral default sort order and sponsored inventory limits.
@@ -52,7 +52,7 @@ This checklist is a go/no-go control. A checked box means evidence exists; it mu
 - [ ] Set retention and deletion periods, access controls, backup protection and incident response.
 - [ ] Review hosting, email, analytics and payment processors as data processors/service providers.
 - [ ] Add consent and image/logo usage permissions to the future submission process.
-- [ ] Define how complaints, impersonation, misleading claims, prohibited content and takedown requests are handled.
+- [x] Define and implement founder review for incorrect information, unauthorized listings, misleading claims, closed businesses and other concerns. [ ] Set a response-time standard and formal takedown escalation procedure.
 
 ## E. Sasha AI — separate product gate
 - [x] Keep the current status at supervised demonstration prototype only.
