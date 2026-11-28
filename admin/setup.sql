@@ -141,6 +141,10 @@ on public.business_submissions(status, submitted_at desc);
 
 create index if not exists business_submissions_contact_date_idx
 on public.business_submissions(lower(contact_email), submitted_at desc);
+ 
+create unique index if not exists business_submissions_active_business_email_uidx
+on public.business_submissions (lower(btrim(contact_email)), lower(btrim(business_name)))
+where status in ('pending','changes_requested','approved');
 
 -- Migrations for a prior partial setup. NOT VALID keeps legacy rows from blocking setup,
 -- while the constraints still apply to new and updated rows.
@@ -288,6 +292,61 @@ using(is_published = true);
 create policy "Founder can read all business listings"
 on public.business_listings for select to authenticated
 using(public.is_orbital_founder());
+
+-- Founder-only listing moderation; only the publication flag is writable.
+grant update (is_published) on public.business_listings to authenticated;
+drop policy if exists "Founder can manage listing publication" on public.business_listings;
+create policy "Founder can manage listing publication"
+on public.business_listings for update to authenticated
+using (public.is_orbital_founder())
+with check (public.is_orbital_founder());
+
+-- Search is invoker-rights and remains subject to the public-listing RLS policy.
+create or replace function public.search_business_directory(
+  p_search text default null,
+  p_category text default null,
+  p_location text default null,
+  p_limit integer default 12,
+  p_offset integer default 0
+)
+returns table (
+  id uuid, business_name text, category text, country text, city text,
+  description text, website_url text, public_email text, public_phone text
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $directory$
+  select b.id,b.business_name,b.category,b.country,b.city,b.description,
+         b.website_url,b.public_email,b.public_phone
+  from public.business_listings b
+  where b.is_published = true
+    and (
+      nullif(pg_catalog.btrim(p_search),'') is null
+      or b.business_name ilike '%' || pg_catalog.btrim(p_search) || '%'
+      or b.description ilike '%' || pg_catalog.btrim(p_search) || '%'
+      or b.category ilike '%' || pg_catalog.btrim(p_search) || '%'
+      or b.city ilike '%' || pg_catalog.btrim(p_search) || '%'
+      or b.country ilike '%' || pg_catalog.btrim(p_search) || '%'
+    )
+    and (
+      nullif(pg_catalog.btrim(p_category),'') is null
+      or b.category = pg_catalog.btrim(p_category)
+    )
+    and (
+      nullif(pg_catalog.btrim(p_location),'') is null
+      or b.city ilike '%' || pg_catalog.btrim(p_location) || '%'
+      or b.country ilike '%' || pg_catalog.btrim(p_location) || '%'
+    )
+  order by b.business_name asc
+  limit greatest(1,least(coalesce(p_limit,12),50))
+  offset greatest(coalesce(p_offset,0),0);
+$directory$;
+
+revoke all on function public.search_business_directory(text,text,text,integer,integer) from public;
+grant execute on function public.search_business_directory(text,text,text,integer,integer) to anon, authenticated;
+
 
 -- Normalize email before taking the per-email advisory lock.
 -- This is a modest abuse limit, not a substitute for CAPTCHA or IP protection.
