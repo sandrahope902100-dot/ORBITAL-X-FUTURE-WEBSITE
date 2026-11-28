@@ -3,12 +3,109 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UncA_hZ7jUkxw";
 const FOUNDER="orbitalxfuture@gmail.com";const $=id=>document.getElementById(id);let db=null,ready=false;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const msg=(id,t)=>{$(id).textContent=t||"";};
+let mfaFactorId=null,mfaChallengeId=null,mfaMode=null;
 async function verifyFounder(session){
  if(!session?.user?.email_confirmed_at||session.user.email?.toLowerCase()!==FOUNDER)return false;
- const {data,error}=await db.rpc("is_orbital_founder");
+ const {data,error}=await db.rpc("is_orbital_founder_identity");
  return !error&&data===true;
 }
-function show(on){$("loginView").hidden=on;$("dashboardView").hidden=!on;}
+function show(on){$("loginView").hidden=on;$("dashboardView").hidden=!on;if(on)$("mfaGate").hidden=true;}
+function showMfaGate(){ $("loginView").hidden=true;$("dashboardView").hidden=true;$("mfaGate").hidden=false; }
+async function openFounderDashboard(){
+ $("mfaGate").hidden=true;show(true);
+ await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
+}
+async function issueMfaChallenge(){
+ const {data,error}=await db.auth.mfa.challenge({factorId:mfaFactorId});
+ if(error)throw error;
+ mfaChallengeId=data.id;
+ $("mfaSetup").hidden=true;
+ $("mfaQrPanel").hidden=true;
+ $("mfaVerifyForm").hidden=false;
+ $("mfaCode").value="";
+ $("mfaCode").focus();
+ msg("mfaMessage","Enter the current six-digit code from your authenticator app.");
+}
+async function prepareFounderAccess(session){
+ if(!(await verifyFounder(session))){
+  await db.auth.signOut();show(false);$("mfaGate").hidden=true;
+  msg("loginMessage","This account is not on the verified founder allowlist.");
+  return false;
+ }
+ const {data:levels,error:levelError}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+ if(levelError)throw levelError;
+ if(levels?.currentLevel==="aal2"&&levels?.nextLevel==="aal2"){
+  await openFounderDashboard();
+  return true;
+ }
+ const {data:factors,error:factorsError}=await db.auth.mfa.listFactors();
+ if(factorsError)throw factorsError;
+ const verified=(factors?.totp||[]).filter(f=>f.status==="verified");
+ showMfaGate();
+ if(verified.length){
+  mfaMode="challenge";mfaFactorId=verified[0].id;
+  $("mfaSetup").hidden=true;
+  $("mfaQrPanel").hidden=true;
+  $("mfaVerifyForm").hidden=false;
+  $("mfaVerifyButton").textContent="Verify and enter Founder Dashboard";
+  $("mfaMessage").textContent="Two-factor authentication is enabled. Enter the current code from your authenticator app.";
+  await issueMfaChallenge();
+ }else{
+  mfaMode="setup";mfaFactorId=null;mfaChallengeId=null;
+  $("mfaSetup").hidden=false;
+  $("mfaQrPanel").hidden=true;
+  $("mfaVerifyForm").hidden=true;
+  $("mfaMessage").textContent="Before entering the dashboard, set up and verify an authenticator.";
+ }
+ return false;
+}
+async function startMfaSetup(){
+ $("startMfaButton").disabled=true;msg("mfaMessage","Preparing secure authenticator setup…");
+ try{
+  const {data:factors,error:listError}=await db.auth.mfa.listFactors();
+  if(listError)throw listError;
+  for(const factor of (factors?.totp||[]).filter(f=>f.status!=="verified")){
+   const {error}=await db.auth.mfa.unenroll({factorId:factor.id});
+   if(error)throw error;
+  }
+  const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"ORBITAL X FUTURE Founder"});
+  if(error)throw error;
+  mfaFactorId=data.id;mfaMode="enroll";
+  const rawQr=data.totp?.qr_code||"";
+  $("mfaQrImage").src=/^data:image\//i.test(rawQr)?rawQr:"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(rawQr);
+  $("mfaSecret").textContent=data.totp?.secret||"";
+  $("mfaSetup").hidden=true;$("mfaQrPanel").hidden=false;$("mfaVerifyForm").hidden=false;
+  $("mfaVerifyButton").textContent="Verify authenticator and secure dashboard";
+  const challenge=await db.auth.mfa.challenge({factorId:mfaFactorId});
+  if(challenge.error)throw challenge.error;
+  mfaChallengeId=challenge.data.id;
+  $("mfaCode").value="";$("mfaCode").focus();
+  msg("mfaMessage","Add the account to your authenticator, then enter its current six-digit code.");
+ }catch(error){
+  console.error("Founder MFA setup failed:",error);
+  msg("mfaMessage","Authenticator setup could not start: "+(error.message||"Please retry."));
+ }finally{$("startMfaButton").disabled=false;}
+}
+async function completeMfa(event){
+ event.preventDefault();
+ const code=$("mfaCode").value.trim();
+ if(!/^\d{6}$/.test(code)){msg("mfaMessage","Enter the six-digit code from your authenticator.");return;}
+ if(!mfaFactorId||!mfaChallengeId){msg("mfaMessage","The verification session expired. Sign out and sign in again.");return;}
+ $("mfaVerifyButton").disabled=true;msg("mfaMessage","Verifying authenticator…");
+ try{
+  const {error}=await db.auth.mfa.verify({factorId:mfaFactorId,challengeId:mfaChallengeId,code});
+  if(error)throw error;
+  const {data:levels,error:levelError}=await db.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(levelError)throw levelError;
+  if(levels?.currentLevel!=="aal2"||levels?.nextLevel!=="aal2")throw new Error("The session has not reached the required verified level.");
+  $("mfaSecret").textContent="";$("mfaQrImage").removeAttribute("src");
+  await openFounderDashboard();
+ }catch(error){
+  console.error("Founder MFA verification failed:",error);
+  msg("mfaMessage","Verification failed: "+(error.message||"Check the code and try again."));
+  if(mfaFactorId){try{const challenge=await db.auth.mfa.challenge({factorId:mfaFactorId});if(!challenge.error)mfaChallengeId=challenge.data.id;}catch{}}
+ }finally{$("mfaVerifyButton").disabled=false;}
+}
 async function notes(){
  try{
   const {data,error}=await db.from("founder_notes").select("id,title,body,created_at").order("created_at",{ascending:false});
@@ -230,9 +327,8 @@ async function init(){
   const {data,error}=await db.auth.getSession();
   if(error)throw error;
   const session=data?.session;
-  if(session&&!(await verifyFounder(session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
-  show(Boolean(session));
-  if(session)await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
+  if(session){await prepareFounderAccess(session);}
+  else{show(false);$("mfaGate").hidden=true;}
  }catch(error){
   console.error("Founder dashboard initialization failed:",error);
   msg("loginMessage","Secure sign-in could not connect. Check your connection and try again.");
@@ -246,10 +342,8 @@ $("loginForm").addEventListener("submit",async e=>{
  try{
   const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error){msg("loginMessage","Sign-in failed. Check credentials and Supabase Auth setup.");return;}
-  if(!(await verifyFounder(data.session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   msg("loginMessage","");
-  show(true);
-  await Promise.all([notes(),loadApps(),loadReports(),loadPaymentSettings()]);
+  await prepareFounderAccess(data.session);
  }catch(error){
   console.error("Founder sign-in failed:",error);
   msg("loginMessage","Sign-in could not be completed because of a connection problem. Try again.");
@@ -257,7 +351,10 @@ $("loginForm").addEventListener("submit",async e=>{
   $("loginButton").disabled=false;
  }
 });
-$("signOutButton").addEventListener("click",async()=>{await db.auth.signOut();show(false);$("loginForm").reset();});
+$("signOutButton").addEventListener("click",async()=>{await db.auth.signOut();show(false);$("mfaGate").hidden=true;$("loginForm").reset();});
+$("mfaSignOutButton").addEventListener("click",async()=>{await db.auth.signOut();show(false);$("mfaGate").hidden=true;$("loginForm").reset();});
+$("startMfaButton").addEventListener("click",startMfaSetup);
+$("mfaVerifyForm").addEventListener("submit",completeMfa);
 $("noteForm").addEventListener("submit",async e=>{
  e.preventDefault();
  $("saveNoteButton").disabled=true;
