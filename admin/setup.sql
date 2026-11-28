@@ -144,7 +144,7 @@ on public.business_submissions(lower(contact_email), submitted_at desc);
  
 create unique index if not exists business_submissions_active_business_email_uidx
 on public.business_submissions (lower(btrim(contact_email)), lower(btrim(business_name)))
-where status in ('pending','changes_requested','approved');
+where status in ('pending','approved');
 
 -- Migrations for a prior partial setup. NOT VALID keeps legacy rows from blocking setup,
 -- while the constraints still apply to new and updated rows.
@@ -341,7 +341,7 @@ as $directory$
     )
   order by b.business_name asc
   limit greatest(1,least(coalesce(p_limit,12),50))
-  offset greatest(coalesce(p_offset,0),0);
+  offset least(greatest(coalesce(p_offset,0),0),50000);
 $directory$;
 
 revoke all on function public.search_business_directory(text,text,text,integer,integer) from public;
