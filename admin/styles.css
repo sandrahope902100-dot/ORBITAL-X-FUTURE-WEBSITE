@@ -4,3 +4,9 @@
 .listing-admin-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .listing-admin-actions button{margin:0;padding:9px 12px;font-size:11px}
 @media(max-width:520px){.approved-row{align-items:flex-start;gap:12px;flex-direction:column}.listing-admin-actions{justify-content:flex-start}}
+
+.listing-report-form{display:grid;gap:10px;padding:12px 0}
+.listing-report-form label{display:grid;gap:6px;color:#cbd9eb;font-size:12px}
+.listing-report-form input,.listing-report-form select,.listing-report-form textarea{width:100%;padding:11px;background:#080f1b;border:1px solid var(--line);border-radius:4px;color:var(--text);font:13px Arial}
+.listing-report-form button{justify-self:start}
+.report-status{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
