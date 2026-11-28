@@ -18,6 +18,9 @@ The public website explains the venture, Sasha AI and the proposed directory. Th
 
 ## Directory workflow implemented
 
+**Do not run `admin/setup.sql`.** It is a historical bootstrap file and has been disabled because it predates the current AAL2 and payment controls. Re-running it would overwrite the founder MFA check and re-grant anonymous application inserts. Use `admin/verify.sql` for read-only checks; the live database's migration history is authoritative.
+
+
 1. Applicant submits a business application with separate privacy, authority, subscription-terms and publication consents.
 2. The database stores the application as pending. Anonymous visitors cannot read or alter application records.
 3. The verified founder reviews the application. Approval moves it to `approved_pending_payment`; approval does not publish it. Rejections and change requests do not publish.
