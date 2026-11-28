@@ -67,6 +67,34 @@ async function renewListing(id,button){
   button.disabled=false;
  }
 }
+const reportLabels={incorrect_information:"Incorrect information",business_not_authorized:"Business did not authorize listing",misleading_claim:"Misleading or harmful claim",closed_business:"Business is closed",other:"Other concern"};
+async function loadReports(){
+ try{
+  const {data,error}=await db.from("directory_reports").select("id,listing_id,listing_name,reason,details,contact_email,status,founder_notes,created_at").order("created_at",{ascending:false}).limit(100);
+  if(error){$("directoryReports").textContent="Reports could not be loaded.";msg("reportMessage","Check founder access to the report queue.");return;}
+  msg("reportMessage","");
+  $("directoryReports").innerHTML=data?.length?data.map(r=>'<article class="application-card"><div class="application-title"><div><span class="status-pill">'+esc(r.status)+'</span><h3>'+esc(r.listing_name)+'</h3></div><small>'+esc(new Date(r.created_at).toLocaleString())+'</small></div><div class="application-details"><div class="application-detail"><span>Reason</span><p>'+esc(reportLabels[r.reason]||r.reason)+'</p></div><div class="application-detail"><span>Reporter email</span><p>'+esc(r.contact_email)+'</p></div><div class="application-detail"><span>Listing ID</span><p>'+esc(r.listing_id||"Listing no longer exists")+'</p></div><div class="application-detail"><span>Details</span><p>'+esc(r.details)+'</p></div></div><label>Private resolution note<textarea data-report-note="'+esc(r.id)+'" rows="2" maxlength="2000">'+esc(r.founder_notes||"")+'</textarea></label><div class="review-actions"><button class="secondary" data-report-status="investigating" data-report-id="'+esc(r.id)+'">Investigating</button><button data-report-status="resolved" data-report-id="'+esc(r.id)+'">Resolve</button><button class="danger" data-report-status="dismissed" data-report-id="'+esc(r.id)+'">Dismiss</button></div></article>').join(""):'<p class="muted">No listing reports received.</p>';
+  $("directoryReports").querySelectorAll("[data-report-status]").forEach(b=>b.addEventListener("click",()=>updateReport(b.dataset.reportId,b.dataset.reportStatus,b)));
+ }catch(error){
+  console.error("Directory reports failed to load:",error);
+  $("directoryReports").textContent="Reports could not be loaded because of a connection problem.";
+ }
+}
+async function updateReport(id,status,button){
+ const note=document.querySelector('[data-report-note="'+id+'"]').value.trim();
+ if(status==="resolved"&&!confirm("Mark this report as resolved? Ensure any required listing correction or removal is complete."))return;
+ if(status==="dismissed"&&!confirm("Dismiss this report?"))return;
+ button.disabled=true;msg("reportMessage","Saving report decision…");
+ try{
+  const {error}=await db.from("directory_reports").update({status,founder_notes:note||null,resolved_at:status==="resolved"?new Date().toISOString():null}).eq("id",id);
+  if(error){msg("reportMessage","Report decision was not saved. Refresh and try again.");return;}
+  msg("reportMessage","Report status updated.");
+  await loadReports();
+ }catch(error){
+  console.error("Report moderation failed:",error);
+  msg("reportMessage","Could not update report. Refresh and verify before retrying.");
+ }finally{button.disabled=false;}
+}
 async function loadApps(){
  try{
   const {data,error}=await db.from("business_submissions").select("id,business_name,category,country,city,description,website_url,public_email,public_phone,contact_name,contact_email,status,review_notes,submitted_at").in("status",["pending","changes_requested"]).order("submitted_at");
@@ -124,7 +152,7 @@ async function init(){
   const session=data?.session;
   if(session&&!(await verifyFounder(session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   show(Boolean(session));
-  if(session)await Promise.all([notes(),loadApps()]);
+  if(session)await Promise.all([notes(),loadApps(),loadReports()]);
  }catch(error){
   console.error("Founder dashboard initialization failed:",error);
   msg("loginMessage","Secure sign-in could not connect. Check your connection and try again.");
@@ -141,7 +169,7 @@ $("loginForm").addEventListener("submit",async e=>{
   if(!(await verifyFounder(data.session))){await db.auth.signOut();msg("loginMessage","This account is not on the verified founder allowlist.");return;}
   msg("loginMessage","");
   show(true);
-  await Promise.all([notes(),loadApps()]);
+  await Promise.all([notes(),loadApps(),loadReports()]);
  }catch(error){
   console.error("Founder sign-in failed:",error);
   msg("loginMessage","Sign-in could not be completed because of a connection problem. Try again.");
@@ -166,4 +194,4 @@ $("noteForm").addEventListener("submit",async e=>{
   $("saveNoteButton").disabled=false;
  }
 });
-$("refreshApplications").addEventListener("click",loadApps);init();
+$("refreshApplications").addEventListener("click",loadApps);$("refreshReports").addEventListener("click",loadReports);init();
