@@ -1,5 +1,5 @@
 const URL="https://xhjtvtnhimqjgdmrxbzf.supabase.co";
-const KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UnC_A_hZ7jUkxw";
+const KEY="sb_publishable_aNNnBlHcl-GMv3Mh5_UncA_hZ7jUkxw";
 const form=document.getElementById("businessApplicationForm");
 const status=document.getElementById("applicationStatus");
 const button=document.getElementById("applicationSubmit");
